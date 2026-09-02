@@ -1,0 +1,7 @@
+{
+  "name": "Learn English",
+  "description": "Comprehensive Arabic-English vocabulary and language learning app with smart spaced repetition, quizzes, audio pronunciation, and offline Room database.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
+

@@ -1,0 +1,233 @@
+<resources>
+    <string name="app_name">تعلّم الإنجليزية</string>
+    <string name="app_tagline">أتقن المفردات مع نظام التكرار المتباعد الذكي</string>
+
+    <!-- Navigation -->
+    <string name="nav_home">الرئيسية</string>
+    <string name="nav_words">الكلمات</string>
+    <string name="nav_learn">تعلّم</string>
+    <string name="nav_review">مراجعة</string>
+    <string name="nav_quiz">اختبار</string>
+    <string name="nav_favorites">المفضلة</string>
+    <string name="nav_stats">الإحصائيات</string>
+    <string name="nav_settings">الإعدادات</string>
+    <string name="nav_trash">سلة المحذوفات</string>
+    <string name="nav_mastered">المتقنة</string>
+
+    <!-- Home Screen -->
+    <string name="home_title">تعلّم الإنجليزية</string>
+    <string name="home_subtitle">رحلتك اليومية لإتقان المفردات</string>
+    <string name="home_start_learning">ابدأ التعلّم</string>
+    <string name="home_todays_words">هدف اليوم</string>
+    <string name="home_new_words">كلمات جديدة</string>
+    <string name="home_words_to_review">مستحقة للمراجعة</string>
+    <string name="home_mastered_words">كلمات متقنة</string>
+    <string name="home_learning_words">قيد التعلّم</string>
+    <string name="home_progress_rate">نسبة الإتقان العامة</string>
+    <string name="home_shortcuts">وصول سريع</string>
+    <string name="home_categories">التصنيفات</string>
+    <string name="home_daily_streak">حماس التعلّم اليومي</string>
+    <string name="home_streak_days">%d أيام</string>
+    <string name="home_words_count">%d كلمة</string>
+
+    <!-- Words Screen -->
+    <string name="words_title">مكتبة المفردات</string>
+    <string name="words_search_hint">ابحث بالإنجليزية أو العربية…</string>
+    <string name="search_placeholder">ابحث بالإنجليزية أو العربية…</string>
+    <string name="filter_all">الكل</string>
+    <string name="filter_level">المستوى</string>
+    <string name="filter_category">التصنيف</string>
+    <string name="filter_pos">نوع الكلمة</string>
+    <string name="filter_status">الحالة</string>
+    <string name="sort_az">أبجدي (A → Z)</string>
+    <string name="sort_za">أبجدي (Z → A)</string>
+    <string name="sort_level">حسب المستوى (A1 → C2)</string>
+    <string name="sort_recent">المضافة حديثاً</string>
+    <string name="sort_review">تاريخ الاستحقاق</string>
+    <string name="words_empty">لم يتم العثور على مفردات</string>
+    <string name="empty_words">لم يتم العثور على مفردات</string>
+    <string name="empty_words_desc">جرب مسح الفلاتر أو إضافة كلمات جديدة أو استيراد البيانات التجريبية من الإعدادات.</string>
+    <string name="add_word">إضافة كلمة</string>
+    <string name="edit_word">تعديل الكلمة</string>
+    <string name="delete_word">نقل إلى السلة</string>
+
+    <!-- Word Details -->
+    <string name="word_details">تفاصيل الكلمة</string>
+    <string name="pronunciation_us">أمريكي 🔊</string>
+    <string name="pronunciation_uk">بريطاني 🔊</string>
+    <string name="example_sentence">جملة مثال</string>
+    <string name="example_translation">الترجمة العربية</string>
+    <string name="action_favorite">إضافة للمفضلة</string>
+    <string name="action_unfavorite">إزالة من المفضلة</string>
+    <string name="action_mastered">تم الإتقان</string>
+    <string name="action_review">تحتاج مراجعة</string>
+    <string name="action_dont_know">لا أعرفها</string>
+    <string name="action_learn">ابدأ التعلّم</string>
+    <string name="review_stats">إحصائيات التكرار</string>
+    <string name="review_count">المراجعات: %d مرات</string>
+    <string name="next_review">المراجعة القادمة: %s</string>
+    <string name="last_reviewed">آخر مراجعة: %s</string>
+    <string name="difficulty_level">مستوى الصعوبة: %s</string>
+
+    <!-- Learn / Flashcards Screen -->
+    <string name="learn_title">بطاقات التعلّم الذكية</string>
+    <string name="learn_tap_to_flip">انقر لإظهار المعنى</string>
+    <string name="tap_to_reveal">انقر لإظهار المعنى</string>
+    <string name="card_counter">%1$d / %2$d</string>
+    <string name="learn_i_know">أعرفها جيداً</string>
+    <string name="btn_i_know">أعرفها جيداً</string>
+    <string name="learn_review_later">مراجعة لاحقاً</string>
+    <string name="btn_review_later">مراجعة لاحقاً</string>
+    <string name="learn_dont_know">لا أعرفها</string>
+    <string name="btn_dont_know">لا أعرفها</string>
+    <string name="session_completed">اكتملت الجلسة بنجاح! 🎉</string>
+    <string name="session_completed_desc">أحسنت! أكملت مراجعة بطاقات اليوم بنجاح.</string>
+    <string name="btn_start_another">تعلّم المزيد من الكلمات</string>
+    <string name="btn_back_home">العودة للرئيسية</string>
+
+    <!-- Smart Review Screen -->
+    <string name="review_title">المراجعة الذكية المتباعدة</string>
+    <string name="review_start">ابدأ المراجعة</string>
+    <string name="review_subtitle">نظام التكرار المتباعد لتثبيت الكلمات في الذاكرة</string>
+    <string name="no_review_due">أنت على المسار الصحيح!</string>
+    <string name="no_review_due_desc">لا توجد كلمات مستحقة للمراجعة حالياً. تفقد لاحقاً أو تعلّم كلمات جديدة.</string>
+    <string name="btn_review_all">مراجعة المستحقة (%d)</string>
+
+    <!-- Quizzes -->
+    <string name="quiz_title">ساحة الاختبارات</string>
+    <string name="quiz_completed">نتائج الاختبار</string>
+    <string name="quiz_subtitle">اختبر معلوماتك وعزز حفظ المفردات</string>
+    <string name="quiz_mode_en_to_ar">إنجليزي ← عربي (اختيار)</string>
+    <string name="quiz_type_en_ar">إنجليزي ← عربي (اختيار)</string>
+    <string name="quiz_mode_ar_to_en">عربي ← إنجليزي (اختيار)</string>
+    <string name="quiz_type_ar_en">عربي ← إنجليزي (اختيار)</string>
+    <string name="quiz_mode_listening">تحدي الاستماع 🎧</string>
+    <string name="quiz_type_listening">تحدي الاستماع 🎧</string>
+    <string name="quiz_mode_sentence">إكمال الجمل ✍️</string>
+    <string name="quiz_type_sentence">إكمال الجمل ✍️</string>
+    <string name="quiz_mode_spelling">تحدي التهجئة والتركيب 🔤</string>
+    <string name="quiz_type_spelling">تحدي التهجئة والتركيب 🔤</string>
+    <string name="quiz_type_category">اختبار التصنيف 📚</string>
+    <string name="quiz_type_favorites">اختبار المفضلة ⭐</string>
+    <string name="quiz_question_count">سؤال %1$d من %2$d</string>
+    <string name="quiz_check">تحقق من الإجابة</string>
+    <string name="quiz_next">السؤال التالي</string>
+    <string name="quiz_finished">نتائج الاختبار</string>
+    <string name="quiz_score">نقاطك: %1$d / %2$d</string>
+    <string name="quiz_accuracy">الدقة: %d%%</string>
+    <string name="quiz_correct">الصحيحة: %d</string>
+    <string name="quiz_wrong">الخاطئة: %d</string>
+    <string name="quiz_retry">إعادة الاختبار</string>
+
+    <!-- Favorites & Mastered -->
+    <string name="favorites_title">الكلمات المحفوظة</string>
+    <string name="favorites_empty">لا توجد كلمات مفضلة بعد.</string>
+    <string name="favorites_empty_desc">اضغط على رمز النجمة عند تصفح الكلمات لحفظها هنا.</string>
+    <string name="mastered_title">الكلمات المتقنة</string>
+    <string name="mastered_empty">لا توجد كلمات متقنة بعد.</string>
+    <string name="mastered_empty_desc">الكلمات التي تتقنها ستظهر هنا لمتابعة إنجازك.</string>
+    <string name="action_reset_learning">إعادة لقيد التعلّم</string>
+
+    <!-- Trash Screen -->
+    <string name="trash_title">سلة المحذوفات</string>
+    <string name="trash_empty">السلة فارغة</string>
+    <string name="trash_empty_desc">الكلمات المحذوفة ستظهر هنا مؤقتاً ويمكن استعادتها.</string>
+    <string name="trash_restore">استعادة</string>
+    <string name="trash_delete_forever">حذف نهائي</string>
+    <string name="trash_empty_all">تفريغ السلة</string>
+    <string name="trash_confirm_empty">هل أنت متأكد من حذف جميع العناصر في السلة نهائياً؟</string>
+
+    <!-- Statistics -->
+    <string name="stats_title">الإحصائيات والتحليلات</string>
+    <string name="stats_total_words">إجمالي كلمات القاعدة</string>
+    <string name="stats_status_distribution">توزيع الحالات</string>
+    <string name="stats_level_distribution">الكلمات حسب مستوى CEFR</string>
+    <string name="stats_category_distribution">الكلمات حسب التصنيف</string>
+    <string name="stats_daily_target_progress">تقدم الهدف اليومي</string>
+    <string name="stats_weekly_summary">وتيرة التعلّم الأسبوعية</string>
+    <string name="stats_retention_rate">نسبة التذكر والاسترجاع</string>
+
+    <!-- Import & Export -->
+    <string name="import_title">استيراد من Excel / CSV</string>
+    <string name="import_select_file">اختر ملف CSV / Excel</string>
+    <string name="export_title">تصدير المفردات</string>
+    <string name="import_btn">بدء الاستيراد</string>
+    <string name="import_success">تم الاستيراد بنجاح</string>
+    <string name="dialog_ok">حسناً</string>
+    <string name="import_export_title">إدارة واستيراد البيانات</string>
+    <string name="import_excel_csv">استيراد من Excel / CSV</string>
+    <string name="import_btn_select_file">اختر ملف CSV / Excel</string>
+    <string name="import_preview">معاينة الملف ومطابقة الحقول</string>
+    <string name="import_detected_rows">تم العثور على %d صفاً</string>
+    <string name="import_duplicate_mode">التعامل مع التكرار</string>
+    <string name="import_dup_skip">تخطي المكرر</string>
+    <string name="import_dup_update">تحديث الموجود</string>
+    <string name="import_start">بدء الاستيراد</string>
+    <string name="import_result_title">نتائج الاستيراد</string>
+    <string name="import_res_imported">تم استيرادها: %d</string>
+    <string name="import_res_updated">تم تحديثها: %d</string>
+    <string name="import_res_skipped">تم تخطيها: %d</string>
+    <string name="import_res_errors">صفوف بها أخطاء: %d</string>
+    <string name="export_data">تصدير المفردات</string>
+    <string name="export_format_csv">تصدير بتنسيق CSV</string>
+    <string name="export_format_json">تصدير بتنسيق JSON</string>
+    <string name="export_scope_all">كل المفردات</string>
+    <string name="export_scope_favorites">المفضلة فقط</string>
+    <string name="export_scope_mastered">المتقنة فقط</string>
+    <string name="export_scope_category">تصنيف محدد</string>
+    <string name="download_template">مشاركة قالب Excel / CSV الجاهز</string>
+
+    <!-- Backup & Restore -->
+    <string name="backup_title">النسخ الاحتياطي والاستعادة</string>
+    <string name="backup_create">إنشاء نسخة احتياطية كاملة (JSON)</string>
+    <string name="backup_restore">استعادة من ملف نسخة احتياطية</string>
+    <string name="backup_success">تم إنشاء النسخة وجاهزة للحفظ!</string>
+    <string name="restore_success">تمت استعادة البيانات بنجاح!</string>
+    <string name="restore_confirm">الاستعادة ستقوم بدمج المفردات وتحديثها. هل ترغب في المتابعة؟</string>
+
+    <!-- Settings -->
+    <string name="settings_title">الإعدادات</string>
+    <string name="settings_appearance">المظهر والثيم</string>
+    <string name="settings_theme">المظهر والثيم</string>
+    <string name="settings_theme_light">الوضع الفاتح</string>
+    <string name="settings_theme_dark">الوضع الداكن</string>
+    <string name="settings_theme_system">تلقائي حسب النظام</string>
+    <string name="settings_audio_auto_play">تفعيل النطق الصوتي</string>
+    <string name="settings_speech_rate">سرعة نطق الصوت</string>
+    <string name="theme_light">فاتح</string>
+    <string name="theme_dark">داكن</string>
+    <string name="theme_system">تلقائي (حسب النظام)</string>
+    <string name="settings_language">اللغة / Language</string>
+    <string name="lang_english">English</string>
+    <string name="lang_arabic">العربية</string>
+    <string name="settings_pronunciation">اللهجة الافتراضية للنطق</string>
+    <string name="accent_us">الإنجليزية الأمريكية (US)</string>
+    <string name="accent_uk">الإنجليزية البريطانية (UK)</string>
+    <string name="settings_audio">الصوت والنطق</string>
+    <string name="speech_speed">سرعة النطق: %.2fx</string>
+    <string name="audio_enabled">تفعيل النطق الصوتي</string>
+    <string name="settings_learning">أهداف التعلّم</string>
+    <string name="daily_word_goal">الهدف اليومي: %d كلمات</string>
+    <string name="hide_mastered">إخفاء الكلمات المتقنة أثناء التعلّم</string>
+    <string name="settings_sample_data">المكتبة التجريبية</string>
+    <string name="load_sample_data">تحميل مكتبة المفردات الثرية (200+ كلمة)</string>
+    <string name="sample_data_loaded">تم تحميل المفردات النموذجية بنجاح!</string>
+    <string name="reset_database">إعادة ضبط كل البيانات</string>
+    <string name="reset_confirm">هل أنت متأكد من رغبتك في إعادة تعيين كافة البيانات والمفردات؟</string>
+    <string name="notifications_title">التذكير اليومي</string>
+    <string name="notifications_enabled">تفعيل منبه الدراسة اليومي</string>
+    <string name="notifications_time">وقت التذكير: %s</string>
+
+    <!-- Dialogs & Buttons -->
+    <string name="dialog_cancel">إلغاء</string>
+    <string name="dialog_confirm">تأكيد</string>
+    <string name="dialog_save">حفظ</string>
+    <string name="dialog_delete">حذف</string>
+    <string name="dialog_close">إغلاق</string>
+    <string name="dialog_success">نجاح</string>
+    <string name="dialog_error">خطأ</string>
+    <string name="status_new">جديدة</string>
+    <string name="status_learning">قيد التعلّم</string>
+    <string name="status_review">مراجعة</string>
+    <string name="status_mastered">متقنة</string>
+</resources>
