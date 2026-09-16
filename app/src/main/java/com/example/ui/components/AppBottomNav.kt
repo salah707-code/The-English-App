@@ -2,10 +2,12 @@ package com.example.ui.components
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.MenuBook
+import androidx.compose.material.icons.filled.Category
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Quiz
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.outlined.Category
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.PlayArrow
 import androidx.compose.material.icons.outlined.Quiz
@@ -55,18 +57,18 @@ fun AppBottomNav(
             testTag = "nav_item_words"
         ),
         NavItem(
+            route = Screen.Categories.route,
+            titleRes = R.string.nav_categories,
+            selectedIcon = Icons.Filled.Category,
+            unselectedIcon = Icons.Outlined.Category,
+            testTag = "nav_item_categories"
+        ),
+        NavItem(
             route = Screen.Learn.route,
             titleRes = R.string.nav_learn,
             selectedIcon = Icons.Filled.PlayArrow,
             unselectedIcon = Icons.Outlined.PlayArrow,
             testTag = "nav_item_learn"
-        ),
-        NavItem(
-            route = Screen.Quiz.route,
-            titleRes = R.string.nav_quiz,
-            selectedIcon = Icons.Filled.Quiz,
-            unselectedIcon = Icons.Outlined.Quiz,
-            testTag = "nav_item_quiz"
         ),
         NavItem(
             route = Screen.Settings.route,

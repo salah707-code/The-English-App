@@ -163,6 +163,121 @@ object StarterVocabulary {
         add("Optimistic", "متفائل", "Daily Life", "A2", "Adjective", "/ˌɑːptɪˈmɪstɪk/", "Always stay optimistic about tomorrow.", "ابق دائماً متفائلاً بشأن الغد.")
         add("Vocabulary", "مفردات / حصيلة لغوية", "Academic", "A2", "Noun", "/vəˈkæbjəleri/", "Expanding your vocabulary opens new worlds.", "توسيع مفرداتك يفتح عوالم جديدة أمامك.")
 
+        // --- Categories (17 Specific Categories) ---
+        // 1. آلات
+        add("Engine", "محرك", "آلات", "A2", "Noun", "/ˈendʒɪn/", "The car's engine runs quietly.", "محرك السيارة يعمل بهدوء.")
+        add("Turbine", "توربين", "آلات", "B2", "Noun", "/ˈtɜːrbaɪn/", "Wind turbines generate clean electricity.", "تولد توربينات الرياح كهرباء نظيفة.")
+        add("Crane", "رافعة أثقال", "آلات", "B1", "Noun", "/kreɪn/", "The crane lifted heavy steel beams.", "رفعت الرافعة عوارض فولاذية ثقيلة.")
+        add("Generator", "مولد كهربائي", "آلات", "B1", "Noun", "/ˈdʒenəreɪtər/", "A backup generator supplied power.", "زود المولد الاحتياطي الطاقة أثناء الانقطاع.")
+        add("Drill", "مثقاب / دريل", "آلات", "A2", "Noun", "/drɪl/", "He used an electric drill to make a hole.", "استخدم مثقاباً كهربائياً لعمل ثقب.")
+
+        // 2. أبعاد و قياسات و أحجام
+        add("Dimension", "بُعد / قياس", "أبعاد و قياسات و أحجام", "B1", "Noun", "/daɪˈmenʃn/", "The room has large dimensions.", "الغرفة ذات أبعاد واسعة.")
+        add("Diameter", "قطر الدائرة", "أبعاد و قياسات و أحجام", "B2", "Noun", "/daɪˈæmɪtər/", "Measure the circle's diameter carefully.", "قس قطر الدائرة بعناية.")
+        add("Altitude", "ارتفاع عن سطح البحر", "أبعاد و قياسات و أحجام", "B2", "Noun", "/ˈæltɪtuːd/", "The airplane reached cruising altitude.", "وصلت الطائرة إلى ارتفاع التحليق.")
+        add("Volume", "حجم / سعة", "أبعاد و قياسات و أحجام", "B1", "Noun", "/ˈvɑːljuːm/", "Calculate the container's total volume.", "احسب الحجم الكلي للحاوية.")
+        add("Perimeter", "محيط الشكل", "أبعاد و قياسات و أحجام", "B2", "Noun", "/pəˈrɪmɪtər/", "Security fences surround the perimeter.", "أسوار أمنية تحيط بالمحيط الخارجي.")
+
+        // 3. أديان
+        add("Faith", "إيمان / عقيدة", "أديان", "B1", "Noun", "/feɪθ/", "Faith gives people inner peace and strength.", "الإيمان يمنح الناس السلام الداخلي والقوة.")
+        add("Worship", "عبادة / يتعبد", "أديان", "B1", "Noun", "/ˈwɜːrʃɪp/", "Places of worship are sacred for communities.", "دور العبادة مقدسة بالنسبة للمجتمعات.")
+        add("Pilgrimage", "حج / رحلة مقدسة", "أديان", "B2", "Noun", "/ˈpɪlɡrɪmɪdʒ/", "Millions perform the annual pilgrimage.", "الملايين يؤدون فريضة الحج السنوية.")
+        add("Sacred", "مقدس", "أديان", "B2", "Adjective", "/ˈseɪkrɪd/", "The ancient shrine is considered sacred.", "يعتبر المزار القديم مقدساً.")
+
+        // 4. أفعال إيجابية
+        add("Encourage", "يشجع / يحفز", "أفعال إيجابية", "A2", "Verb", "/ɪnˈkɜːrɪdʒ/", "Teachers encourage students to read more.", "يشجع المعلمون الطلاب على القراءة أكثر.")
+        add("Flourish", "يزدهر / ينمو بنجاح", "أفعال إيجابية", "B2", "Verb", "/ˈflɜːrɪʃ/", "The economy began to flourish.", "بدأ الاقتصاد في الازدهار والنمو.")
+        add("Empower", "يمكّن / يقوي", "أفعال إيجابية", "B2", "Verb", "/ɪmˈpaʊər/", "Education empowers youth to lead.", "التعليم يمكّن الشباب من القيادة.")
+        add("Reconcile", "يصلح / يوفق بين", "أفعال إيجابية", "C1", "Verb", "/ˈrekənsaɪl/", "They managed to reconcile their differences.", "تمكنوا من التوفيق بين خلافاتهم والصلح.")
+
+        // 5. أفعال سلبية
+        add("Betray", "يخون / يغدر", "أفعال سلبية", "B2", "Verb", "/bɪˈtreɪ/", "He would never betray a loyal friend.", "لن يخون أبداً صديقاً مخلصاً.")
+        add("Deteriorate", "يتدهور / يسوء", "أفعال سلبية", "B2", "Verb", "/dɪˈtɪriəreɪt/", "Weather conditions began to deteriorate.", "بدأت الأحوال الجوية في التدهور.")
+        add("Neglect", "يهمل / يتجاهل", "أفعال سلبية", "B2", "Verb", "/nɪˈɡlekt/", "Do not neglect your health and rest.", "لا تهمل صحتك وقسطك من الراحة.")
+        add("Deceive", "يخدع / يضلل", "أفعال سلبية", "B2", "Verb", "/dɪˈsiːv/", "Appearances can often deceive you.", "المظاهر كثيراً ما تخدع الإنسان.")
+
+        // 6. إدارة و سياسة و قانون
+        add("Legislation", "تشريع / قوانين مسنونة", "إدارة و سياسة و قانون", "B2", "Noun", "/ˌledʒɪsˈleɪʃn/", "Parliament approved the new legislation.", "وافق البرلمان على التشريع الجديد.")
+        add("Governance", "حوكمة / إدارة رشيدة", "إدارة و سياسة و قانون", "C1", "Noun", "/ˈɡʌvərnəns/", "Good governance ensures fair development.", "الحوكمة الرشيدة تضمن تنمية عادلة.")
+        add("Jurisdiction", "ولاية قضائية / اختصاص قانوني", "إدارة و سياسة و قانون", "C1", "Noun", "/ˌdʒʊrɪsˈdɪkʃn/", "The court has jurisdiction over this case.", "للمحكمة اختصاص قضائي في هذه القضية.")
+        add("Decree", "مرسوم / قرار رسمي", "إدارة و سياسة و قانون", "C1", "Noun", "/dɪˈkriː/", "The minister issued an official decree.", "أصدر الوزير مرسوماً رسمياً.")
+
+        // 7. بصر و رؤية
+        add("Glimpse", "لمحة / نظرة خاطفة", "بصر و رؤية", "B1", "Noun", "/ɡlɪmps/", "I caught a glimpse of the shooting star.", "ألقيت نظرة خاطفة على الشهاب العابر.")
+        add("Perceive", "يدرك بالبصر / يلاحظ", "بصر و رؤية", "B2", "Verb", "/pərˈsiːv/", "I could perceive a faint light ahead.", "استطعت إدراك ضوء خافت في الأمام.")
+        add("Illuminate", "يضيء / ينير", "بصر و رؤية", "B2", "Verb", "/ɪˈluːmɪneɪt/", "Lanterns illuminate the garden walkway.", "الفوانيس تنير الممر في الحديقة.")
+        add("Perspective", "منظور / زاوية رؤية", "بصر و رؤية", "B2", "Noun", "/pərˈspektɪv/", "Look at the problem from another perspective.", "انظر إلى المشكلة من منظور وزاوية أخرى.")
+
+        // 8. حركات
+        add("Accelerate", "يتسارع / يزيد السرعة", "حركات", "B2", "Verb", "/əkˈseləreɪt/", "The vehicle began to accelerate rapidly.", "بدأت المركبة تتسارع بسرعة كبيرة.")
+        add("Glide", "ينزلق / يحلق بسلاسة", "حركات", "B1", "Verb", "/ɡlaɪd/", "The eagle glides effortlessly across the sky.", "يحلق النسر بانسيابية في كبد السماء.")
+        add("Propel", "يدفع للأمام / يسير", "حركات", "B2", "Verb", "/prəˈpel/", "Jets propel the aircraft into flight.", "المحركات النفاثة تدفع الطائرة للطيران.")
+        add("Oscillate", "يتذبذب / يتأرجح", "حركات", "C1", "Verb", "/ˈɑːsɪleɪt/", "The pendulum oscillates back and forth.", "يتأرجح البندول ذهاباً وإياباً.")
+
+        // 9. صفات جيدة
+        add("Benevolent", "خيّر / محب للخير", "صفات جيدة", "C1", "Adjective", "/bəˈnevələnt/", "The benevolent leader helped those in need.", "ساعد القائد الخيّر المحتاجين.")
+        add("Trustworthy", "جدير بالثقة / أمين", "صفات جيدة", "B1", "Adjective", "/ˈtrʌstwɜːrði/", "He is a reliable and trustworthy partner.", "إنه شريك موثوق وجدير بالأمانة.")
+        add("Sincere", "مخلص / صادق النية", "صفات جيدة", "B1", "Adjective", "/sɪnˈsɪr/", "Accept my sincere gratitude.", "تقبل خالص امتناني وتقديري الصادق.")
+        add("Courageous", "شجاع / مقدام", "صفات جيدة", "B1", "Adjective", "/kəˈreɪdʒəs/", "The firefighter made a courageous rescue.", "قام رجل الإطفاء بعملية إنقاذ شجاعة.")
+
+        // 10. صفات سلبية
+        add("Arrogant", "متكبر / مغرور", "صفات سلبية", "B1", "Adjective", "/ˈærəɡənt/", "His arrogant behavior alienated his friends.", "سلوكه المتكبر أبعد أصدقاءه عنه.")
+        add("Hostile", "عدائي / غير ودي", "صفات سلبية", "B2", "Adjective", "/ˈhɑːstl/", "They faced a hostile reception.", "واجهوا استقبالاً عدائياً.")
+        add("Reckless", "متهور / طائش", "صفات سلبية", "B2", "Adjective", "/ˈrekləs/", "Reckless driving causes serious accidents.", "القيادة المتهورة تسبب حوادث خطيرة.")
+        add("Cynical", "ساخر بسوداوية / متشائم", "صفات سلبية", "B2", "Adjective", "/ˈsɪnɪkl/", "Do not become cynical about honesty.", "لا تكن ساخراً أو فاقد الثقة في الصدق.")
+
+        // 11. طبيعة
+        add("Glacier", "نهر جليدي", "طبيعة", "B1", "Noun", "/ˈɡleɪʃər/", "The ancient glacier is melting slowly.", "النهر الجليدي القديم يذوب ببطء.")
+        add("Meadow", "مرج أخضر / روضة", "طبيعة", "B2", "Noun", "/ˈmedoʊ/", "Wildflowers bloomed in the sunny meadow.", "أزهرت الزهور البرية في المرج المشمس.")
+        add("Horizon", "أفق", "طبيعة", "B1", "Noun", "/həˈraɪzn/", "The sun disappeared below the horizon.", "غابت الشمس تحت خط الأفق.")
+        add("Canopy", "مظلة الغابة الشجرية", "طبيعة", "B2", "Noun", "/ˈkænəpi/", "Birds nest high in the forest canopy.", "تعشش الطيور عالياً في مظلة الغابة الشجرية.")
+
+        // 12. علوم
+        add("Molecule", "جزيء", "علوم", "B2", "Noun", "/ˈmɑːlɪkjuːl/", "Water consists of hydrogen and oxygen molecules.", "يتكون الماء من جزيئات الهيدروجين والأكسجين.")
+        add("Synthesis", "تخليق / توليف كيميائي", "علوم", "C1", "Noun", "/ˈsɪnθəsɪs/", "The chemical synthesis yielded a new compound.", "أسفر التخليق الكيميائي عن مركب جديد.")
+        add("Genetics", "علم الوراثة", "علوم", "B2", "Noun", "/dʒəˈnetɪks/", "Modern medicine relies heavily on genetics.", "يعتمد الطب الحديث بشكل كبير على علم الوراثة.")
+        add("Quantum", "كمومي / كوانتم", "علوم", "C1", "Adjective", "/ˈkwɑːntəm/", "Quantum computing will revolutionize speed.", "الحوسبة الكمومية ستحدث ثورة في سرعة المعالجة.")
+
+        // 13. فترة زمنية
+        add("Era", "عصر / حقبة تاريخية", "فترة زمنية", "B1", "Noun", "/ˈɪrə/", "The digital era transformed human life.", "غيّر العصر الرقمي حياة البشرية.")
+        add("Epoch", "فترة زمنية بارزة", "فترة زمنية", "C1", "Noun", "/ˈepək/", "The discovery marked a new epoch in science.", "شكل هذا الاكتشاف حقبة جديدة في تاريخ العلم.")
+        add("Twilight", "شفق / غسق", "فترة زمنية", "B2", "Noun", "/ˈtwaɪlaɪt/", "Stars begin to appear at twilight.", "تبدأ النجوم بالظهور عند الشفق المسائي.")
+        add("Century", "قرن من الزمان / مئة عام", "فترة زمنية", "A2", "Noun", "/ˈsentʃəri/", "The castle was built in the sixteenth century.", "شُيدت القلعة في القرن السادس عشر.")
+
+        // 14. فنون و آداب
+        add("Masterpiece", "تحفة فنية / عمل رائع", "فنون و آداب", "B2", "Noun", "/ˈmæstərpiːs/", "The Mona Lisa is a timeless masterpiece.", "تعتبر الموناليزا تحفة فنية خالدة.")
+        add("Metaphor", "استعارة مجازية", "فنون و آداب", "B2", "Noun", "/ˈmetəfɔːr/", "Poets often use metaphor to convey emotions.", "يستخدم الشعراء الاستعارة للتعبير عن المشاعر.")
+        add("Calligraphy", "فن الخط العربي", "فنون و آداب", "B2", "Noun", "/kəˈlɪɡrəfi/", "Arabic calligraphy is a celebrated art form.", "الخط العربي فن عريق ومشهود له بالإبداع.")
+        add("Prose", "نثر أدبي", "فنون و آداب", "B2", "Noun", "/proʊz/", "Her prose is rich and vivid.", "نثرها الأدبي غني ومليء بالحيوية.")
+
+        // 15. مباني
+        add("Skyscraper", "ناطحة سحاب", "مباني", "A2", "Noun", "/ˈskaɪskreɪpər/", "The skyscraper towers over the city center.", "ترتفع ناطحة السحاب فوق مركز المدينة.")
+        add("Fortress", "حصن / قلعة منيعة", "مباني", "B2", "Noun", "/ˈfɔːrtrəs/", "The ancient stone fortress stood undefeated.", "وقف الحصن الحجري صامداً عبر القرون.")
+        add("Monument", "نصب تذكاري / معلم أثري", "مباني", "B1", "Noun", "/ˈmɑːnjumənt/", "Tourists gathered near the national monument.", "تجمع السياح بالقرب من النصب التذكاري الوطني.")
+        add("Cathedral", "كاتدرائية / صرح تاريخي", "مباني", "B1", "Noun", "/kəˈθiːdrəl/", "The cathedral features grand gothic arches.", "تتميز الكاتدرائية بأقواس معمارية مهيبة.")
+
+        // 16. مشاعر و عواطف
+        add("Compassion", "عطف / رحمة وشفقة", "مشاعر و عواطف", "B2", "Noun", "/kəmˈpæʃn/", "Treat all creatures with kindness and compassion.", "عامل جميع الكائنات بلطف ورأفة ورحمة.")
+        add("Gratitude", "امتنان / عرفان بالجميل", "مشاعر و عواطف", "B1", "Noun", "/ˈɡrætɪtuːd/", "Expressing gratitude brightens your spirit.", "التعبير عن الامتنان والحمد يبهج الروح.")
+        add("Euphoria", "نشوة / غمرة فرح", "مشاعر و عواطف", "C1", "Noun", "/juːˈfɔːriə/", "The team was in euphoria after winning.", "غمرت الفريق نشوة وفرحة غامرة بعد الفوز.")
+        add("Nostalgia", "حنين إلى الماضي / نوستالجيا", "مشاعر و عواطف", "B2", "Noun", "/nɑːˈstældʒə/", "Old photographs filled him with nostalgia.", "ملأت الصور القديمة قلبه بالحنين إلى الماضي.")
+
+        // 17. موسيقى و أصوات
+        add("Melody", "لحن موسيقي", "موسيقى و أصوات", "A2", "Noun", "/ˈmelədi/", "The catchy melody stayed in my head all day.", "بقي اللحن الموسيقي العذب في رأسي طوال اليوم.")
+        add("Harmony", "هارموني / انسجام نغمي", "موسيقى و أصوات", "B2", "Noun", "/ˈhɑːrməni/", "The choir sang in perfect harmony.", "غنت فرقة الكورال بانسجام وتناغم تام.")
+        add("Resonance", "رنين / صدى صوتي", "موسيقى و أصوات", "B2", "Noun", "/ˈrezənəns/", "The acoustic guitar produces deep resonance.", "ينتج الجيتار الصوتي رنيناً عميقاً وغنياً.")
+        add("Acoustics", "علم الصوتيات / جودة الصوت", "موسيقى و أصوات", "B2", "Noun", "/əˈkuːstɪks/", "The hall has exceptional acoustics for concerts.", "تتمتع القاعة بجودة صوتيات استثنائية للحفلات.")
+
+        // 18. العبارات الشائعة
+        add("Piece of cake", "أمر في غاية السهولة / سهل جداً", "العبارات الشائعة", "A2", "Phrase", "/piːs əv keɪk/", "Don't worry about the quiz, it's a piece of cake!", "لا تقلق بشأن الاختبار، فهو سهل جداً وفي غاية البساطة!")
+        add("Break a leg", "أتمنى لك التوفيق / حظاً سعيداً", "العبارات الشائعة", "B1", "Phrase", "/breɪk ə leɡ/", "You will do great in your speech today, break a leg!", "ستبلي بلاءً حسناً في إلقائك اليوم، أتمنى لك التوفيق!")
+        add("Once in a blue moon", "نادراً جداً / في مناسبات متباعدة", "العبارات الشائعة", "B2", "Phrase", "/wʌns ɪn ə bluː muːn/", "He lives far away, so we only meet once in a blue moon.", "إنه يسكن بعيداً، لذا فإننا نلتقي نادراً جداً.")
+        add("Better late than never", "أن تأتي متأخراً خير من ألا تأتي أبداً", "العبارات الشائعة", "A2", "Phrase", "/ˈbetər leɪt ðæn ˈnevər/", "She finally arrived at the meeting; better late than never.", "وصلت أخيراً إلى الاجتماع، أن تأتي متأخراً خير من ألا تأتي أبداً.")
+        add("Actions speak louder than words", "الأفعال أبلغ وأصدق من الأقوال", "العبارات الشائعة", "B1", "Phrase", "/ˈækʃənz spiːk ˈlaʊdər/", "He promised to help, but actions speak louder than words.", "وعد بأن يقدم يد العون، لكن الأفعال دائماً أصدق من الأقوال.")
+        add("Call it a day", "يكتفي بهذا القدر / ينهي العمل لهذا اليوم", "العبارات الشائعة", "B1", "Phrase", "/kɔːl ɪt ə deɪ/", "We've made great progress, let's call it a day.", "أحرزنا تقدماً رائعاً، فلنكتفِ بهذا القدر لليوم.")
+        add("Hit the books", "يبدأ بالمذاكرة بجد واجتهاد", "العبارات الشائعة", "B1", "Phrase", "/hɪt ðə bʊks/", "Exam season is approaching, time to hit the books!", "اقترب موسم الامتحانات، حان وقت الجد والمذاكرة بتركيز!")
+        add("Under the weather", "يشعر بتوعك أو إرهاق خفيف", "العبارات الشائعة", "B1", "Phrase", "/ˈʌndər ðə ˈweðər/", "I felt a bit under the weather so I rested at home.", "شعرت بوعكة صحية طفيفة ففضلت الاستراحة في المنزل.")
+
         return list
     }
 }

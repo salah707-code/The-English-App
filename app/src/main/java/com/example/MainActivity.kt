@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -24,12 +25,18 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
+import com.example.data.model.CategoryEntity
 import com.example.ui.components.AppBottomNav
 import com.example.ui.navigation.Screen
+import com.example.ui.screens.ArticlesManagementScreen
+import com.example.ui.screens.CategoryDetailTableScreen
+import com.example.ui.screens.CategoryManagementScreen
 import com.example.ui.screens.FavoritesScreen
 import com.example.ui.screens.HomeScreen
 import com.example.ui.screens.ImportExportScreen
@@ -89,6 +96,7 @@ fun MainAppNavHost(viewModel: WordViewModel) {
     val bottomBarRoutes = listOf(
         Screen.Home.route,
         Screen.Words.route,
+        Screen.Categories.route,
         Screen.Learn.route,
         Screen.Quiz.route,
         Screen.Settings.route
@@ -192,6 +200,44 @@ fun MainAppNavHost(viewModel: WordViewModel) {
 
             composable(Screen.Stats.route) {
                 StatsScreen(
+                    viewModel = viewModel,
+                    onNavigateBack = { navController.popBackStack() }
+                )
+            }
+
+            composable(Screen.Categories.route) {
+                CategoryManagementScreen(
+                    viewModel = viewModel,
+                    onNavigateBack = { navController.popBackStack() },
+                    onCategoryClick = { category ->
+                        if (category.id == "cat_19_articles" || category.name == "المقالات") {
+                            navController.navigate(Screen.Articles.route)
+                        } else {
+                            navController.navigate(Screen.CategoryDetail.createRoute(category.id))
+                        }
+                    }
+                )
+            }
+
+            composable(Screen.Articles.route) {
+                ArticlesManagementScreen(
+                    viewModel = viewModel,
+                    onNavigateBack = { navController.popBackStack() }
+                )
+            }
+
+            composable(
+                route = Screen.CategoryDetail.route,
+                arguments = listOf(navArgument("categoryId") { type = NavType.StringType })
+            ) { backStackEntry ->
+                val categoryId = backStackEntry.arguments?.getString("categoryId") ?: ""
+                val categories by viewModel.allCategories.collectAsState()
+                val selectedCategory = categories.firstOrNull { it.id == categoryId }
+                    ?: CategoryEntity.DEFAULT_CATEGORIES.firstOrNull { it.id == categoryId }
+                    ?: CategoryEntity(id = categoryId, name = "التصنيف", colorHex = "#4F46E5")
+
+                CategoryDetailTableScreen(
+                    category = selectedCategory,
                     viewModel = viewModel,
                     onNavigateBack = { navController.popBackStack() }
                 )

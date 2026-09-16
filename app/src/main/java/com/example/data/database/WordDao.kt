@@ -128,6 +128,12 @@ interface WordDao {
     @Query("DELETE FROM words WHERE isDeleted = 1")
     suspend fun emptyTrash()
 
+    @Query("UPDATE words SET category = :newName WHERE category = :oldName")
+    suspend fun renameCategoryInWords(oldName: String, newName: String)
+
+    @Query("DELETE FROM words WHERE category = :category")
+    suspend fun deleteWordsByCategory(category: String)
+
     @Query("DELETE FROM words")
     suspend fun clearAll()
 }

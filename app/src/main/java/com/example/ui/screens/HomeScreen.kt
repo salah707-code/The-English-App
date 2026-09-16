@@ -27,6 +27,7 @@ import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.Bookmark
+import androidx.compose.material.icons.filled.Category
 import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.FileUpload
 import androidx.compose.material.icons.filled.LocalFireDepartment
@@ -49,6 +50,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -252,16 +254,66 @@ fun HomeScreen(
                             onClick = { onNavigate(Screen.Stats.route) }
                         )
                     }
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        ShortcutButton(
+                            title = "إدارة التصنيفات",
+                            subtitle = "19 تصنيفاً • شبكة وجداول",
+                            icon = Icons.Default.Category,
+                            containerColor = MaterialTheme.colorScheme.primaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                            modifier = Modifier.weight(1f),
+                            onClick = { onNavigate(Screen.Categories.route) }
+                        )
+
+                        ShortcutButton(
+                            title = "المقالات والنصوص",
+                            subtitle = "إكسل • قراءة وترتيب",
+                            icon = Icons.AutoMirrored.Filled.MenuBook,
+                            containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
+                            modifier = Modifier.weight(1f),
+                            onClick = { onNavigate(Screen.Articles.route) }
+                        )
+                    }
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        ShortcutButton(
+                            title = "استيراد وتصدير",
+                            subtitle = "Excel, CSV & JSON",
+                            icon = Icons.Default.FileUpload,
+                            containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                            contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.weight(1f),
+                            onClick = { onNavigate(Screen.ImportExport.route) }
+                        )
+                    }
                 }
             }
 
             // Explore by Category
             item {
-                Text(
-                    text = stringResource(R.string.home_categories),
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                    color = MaterialTheme.colorScheme.onBackground
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "التصنيفات والمفردات",
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                        color = MaterialTheme.colorScheme.onBackground
+                    )
+
+                    TextButton(onClick = { onNavigate(Screen.Categories.route) }) {
+                        Text("إدارة التصنيفات (19)", fontWeight = FontWeight.Bold)
+                    }
+                }
 
                 Spacer(modifier = Modifier.height(12.dp))
 

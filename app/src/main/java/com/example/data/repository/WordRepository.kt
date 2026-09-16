@@ -1,18 +1,26 @@
 package com.example.data.repository
 
+import com.example.data.database.ArticleDao
+import com.example.data.database.CategoryDao
 import com.example.data.database.WordDao
+import com.example.data.model.Article
+import com.example.data.model.CategoryEntity
 import com.example.data.model.LearningStats
 import com.example.data.model.Word
 import com.example.data.preferences.AppPreferences
+import com.example.data.sample.StarterArticles
 import com.example.data.sample.StarterVocabulary
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 
 class WordRepository(
     private val wordDao: WordDao,
+    private val categoryDao: CategoryDao,
+    private val articleDao: ArticleDao,
     private val appPreferences: AppPreferences
 ) {
 
@@ -20,6 +28,17 @@ class WordRepository(
     val favoriteWords: Flow<List<Word>> = wordDao.getFavoriteWords()
     val masteredWords: Flow<List<Word>> = wordDao.getMasteredWords()
     val trashWords: Flow<List<Word>> = wordDao.getTrashWords()
+
+    val allCategories: Flow<List<CategoryEntity>> = categoryDao.getAllCategories()
+    val categoryWordCounts: Flow<Map<String, Int>> = categoryDao.getCategoryWordCounts()
+        .map { list -> list.associate { it.category to it.count } }
+
+    val allArticles: Flow<List<Article>> = articleDao.getAllArticles()
+    val articlesCount: Flow<Int> = articleDao.getArticlesCount()
+
+    fun getWordsByCategory(category: String): Flow<List<Word>> {
+        return wordDao.getWordsByCategory(category)
+    }
 
     fun getDueForReviewWords(): Flow<List<Word>> {
         val now = System.currentTimeMillis()
@@ -35,17 +54,90 @@ class WordRepository(
     }
 
     suspend fun initializeStarterDataIfEmpty() = withContext(Dispatchers.IO) {
+        ensureDefaultCategories()
         val count = wordDao.getTotalWordsCount().first()
         if (count == 0) {
             val starter = StarterVocabulary.getStarterWords()
             wordDao.insertAll(starter)
+        } else {
+            // Check if category 18 ("العبارات الشائعة") has words, if not add them
+            val phraseWords = wordDao.getWordsByCategory("العبارات الشائعة").first()
+            if (phraseWords.isEmpty()) {
+                val starterPhrases = StarterVocabulary.getStarterWords().filter { it.category == "العبارات الشائعة" }
+                if (starterPhrases.isNotEmpty()) {
+                    wordDao.insertAll(starterPhrases)
+                }
+            }
         }
+
+        // Initialize starter articles if none exist
+        val articlesCount = articleDao.getArticlesCountDirect()
+        if (articlesCount == 0) {
+            articleDao.insertAll(StarterArticles.getStarterArticles())
+        }
+    }
+
+    suspend fun ensureDefaultCategories() = withContext(Dispatchers.IO) {
+        val existing = categoryDao.getAllCategories().first()
+        val existingIds = existing.map { it.id }.toSet()
+        val toInsert = CategoryEntity.DEFAULT_CATEGORIES.filter { !existingIds.contains(it.id) }
+        if (toInsert.isNotEmpty()) {
+            categoryDao.insertAll(toInsert)
+        }
+    }
+
+    suspend fun resetCategoriesToDefaults() = withContext(Dispatchers.IO) {
+        categoryDao.insertAll(CategoryEntity.DEFAULT_CATEGORIES)
+    }
+
+    suspend fun reorderCategories(categories: List<CategoryEntity>) = withContext(Dispatchers.IO) {
+        categoryDao.insertAll(categories)
     }
 
     suspend fun resetAndLoadStarterData() = withContext(Dispatchers.IO) {
         wordDao.clearAll()
+        categoryDao.insertAll(CategoryEntity.DEFAULT_CATEGORIES)
         val starter = StarterVocabulary.getStarterWords()
         wordDao.insertAll(starter)
+        articleDao.clearAll()
+        articleDao.insertAll(StarterArticles.getStarterArticles())
+    }
+
+    // Article operations
+    suspend fun insertOrUpdateArticle(article: Article): Long = withContext(Dispatchers.IO) {
+        if (article.id == 0L) {
+            articleDao.insertArticle(article)
+        } else {
+            articleDao.updateArticle(article)
+            article.id
+        }
+    }
+
+    suspend fun insertArticlesBatch(articles: List<Article>) = withContext(Dispatchers.IO) {
+        articleDao.insertAll(articles)
+    }
+
+    suspend fun deleteArticle(id: Long) = withContext(Dispatchers.IO) {
+        articleDao.deleteArticle(id)
+    }
+
+    suspend fun reorderArticles(articles: List<Article>) = withContext(Dispatchers.IO) {
+        articleDao.updateAll(articles)
+    }
+
+    suspend fun insertOrUpdateCategory(category: CategoryEntity) = withContext(Dispatchers.IO) {
+        categoryDao.insertCategory(category)
+    }
+
+    suspend fun renameCategory(oldCategory: CategoryEntity, newName: String) = withContext(Dispatchers.IO) {
+        val updated = oldCategory.copy(name = newName)
+        categoryDao.updateCategory(updated)
+        wordDao.renameCategoryInWords(oldCategory.name, newName)
+    }
+
+    suspend fun deleteCategory(category: CategoryEntity) = withContext(Dispatchers.IO) {
+        categoryDao.deleteCategory(category.id)
+        wordDao.deleteWordsByCategory(category.name)
     }
 
     suspend fun getWordById(id: Long): Word? = withContext(Dispatchers.IO) {

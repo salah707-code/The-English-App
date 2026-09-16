@@ -9,6 +9,8 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.audio.TtsManager
 import com.example.data.database.AppDatabase
+import com.example.data.model.Article
+import com.example.data.model.CategoryEntity
 import com.example.data.model.LearningStats
 import com.example.data.model.Word
 import com.example.data.preferences.AppPreferences
@@ -23,6 +25,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -37,6 +40,7 @@ enum class SortOrder {
 enum class QuizType {
     EN_TO_AR,
     AR_TO_EN,
+    MIXED,
     LISTENING,
     SENTENCE_COMPLETION,
     SPELLING,
@@ -51,7 +55,8 @@ data class QuizQuestion(
     val correctIndex: Int,
     val word: Word,
     val type: QuizType,
-    val scrambledLetters: List<Char> = emptyList()
+    val scrambledLetters: List<Char> = emptyList(),
+    val typeLabel: String = ""
 )
 
 data class QuizState(
@@ -66,7 +71,11 @@ data class QuizState(
     val score: Int = 0,
     val correctCount: Int = 0,
     val wrongCount: Int = 0,
-    val isFinished: Boolean = false
+    val currentStreak: Int = 0,
+    val bestStreak: Int = 0,
+    val isFinished: Boolean = false,
+    val autoAdvance: Boolean = false,
+    val selectedCategoryName: String? = null
 )
 
 data class FlashcardState(
@@ -83,9 +92,23 @@ class WordViewModel(application: Application) : AndroidViewModel(application) {
 
     private val db = AppDatabase.getInstance(application)
     val preferences = AppPreferences(application)
-    val repository = WordRepository(db.wordDao(), preferences)
+    val repository = WordRepository(db.wordDao(), db.categoryDao(), db.articleDao(), preferences)
     val importExportManager = DataImportExportManager(application)
     val ttsManager = TtsManager(application)
+
+    // Category flows
+    val allCategories: StateFlow<List<CategoryEntity>> = repository.allCategories
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val categoryWordCounts: StateFlow<Map<String, Int>> = repository.categoryWordCounts
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyMap())
+
+    // Article flows
+    val allArticles: StateFlow<List<Article>> = repository.allArticles
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val articlesCount: StateFlow<Int> = repository.articlesCount
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)
 
     // Filter and Sort states
     val searchQuery = MutableStateFlow("")
@@ -204,7 +227,14 @@ class WordViewModel(application: Application) : AndroidViewModel(application) {
 
     init {
         viewModelScope.launch {
+            repository.ensureDefaultCategories()
             repository.initializeStarterDataIfEmpty()
+        }
+    }
+
+    fun resetCategoriesToDefaults() {
+        viewModelScope.launch {
+            repository.resetCategoriesToDefaults()
         }
     }
 
@@ -369,7 +399,12 @@ class WordViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     // Quiz Session Flow
-    fun startQuiz(type: QuizType, specificCategory: String? = null) {
+    fun startQuiz(
+        type: QuizType,
+        specificCategory: String? = null,
+        questionCount: Int = 10,
+        autoAdvance: Boolean = false
+    ) {
         viewModelScope.launch {
             var pool = allWords.value
             if (type == QuizType.FAVORITES) {
@@ -377,15 +412,21 @@ class WordViewModel(application: Application) : AndroidViewModel(application) {
                 if (pool.size < 4) {
                     pool = allWords.value
                 }
-            } else if (type == QuizType.CATEGORY && !specificCategory.isNullOrBlank()) {
+            } else if ((type == QuizType.CATEGORY || !specificCategory.isNullOrBlank()) && !specificCategory.isNullOrBlank()) {
                 val catWords = pool.filter { it.category.equals(specificCategory, ignoreCase = true) }
                 if (catWords.size >= 4) pool = catWords
             }
 
-            val questionCount = 10.coerceAtMost(pool.size)
-            val selectedSample = pool.shuffled().take(questionCount)
-            val questions = selectedSample.map { word ->
-                buildQuestionForWord(word, pool, type)
+            if (pool.isEmpty()) return@launch
+
+            val count = questionCount.coerceAtMost(pool.size).coerceAtLeast(1)
+            val selectedSample = pool.shuffled().take(count)
+            val questions = selectedSample.mapIndexed { index, word ->
+                val effectiveType = when (type) {
+                    QuizType.MIXED -> if (index % 2 == 0) QuizType.EN_TO_AR else QuizType.AR_TO_EN
+                    else -> type
+                }
+                buildQuestionForWord(word, pool, effectiveType)
             }
 
             _quizState.value = QuizState(
@@ -400,11 +441,16 @@ class WordViewModel(application: Application) : AndroidViewModel(application) {
                 score = 0,
                 correctCount = 0,
                 wrongCount = 0,
-                isFinished = false
+                currentStreak = 0,
+                bestStreak = 0,
+                isFinished = false,
+                autoAdvance = autoAdvance,
+                selectedCategoryName = specificCategory
             )
 
-            if (type == QuizType.LISTENING) {
-                questions.firstOrNull()?.let { speakWord(it.word.english) }
+            val firstQ = questions.firstOrNull()
+            if (firstQ?.type == QuizType.LISTENING) {
+                speakWord(firstQ.word.english)
             }
         }
     }
@@ -417,11 +463,12 @@ class WordViewModel(application: Application) : AndroidViewModel(application) {
                 val options = (distractors.map { it.arabic } + target.arabic).shuffled()
                 QuizQuestion(
                     prompt = target.english,
-                    subPrompt = target.pronunciation,
+                    subPrompt = target.pronunciation.ifBlank { "${target.level} • ${target.partOfSpeech}" },
                     options = options,
                     correctIndex = options.indexOf(target.arabic),
                     word = target,
-                    type = type
+                    type = type,
+                    typeLabel = "Word → Meaning • كلمة إلى معنى"
                 )
             }
             QuizType.AR_TO_EN -> {
@@ -432,18 +479,33 @@ class WordViewModel(application: Application) : AndroidViewModel(application) {
                     options = options,
                     correctIndex = options.indexOf(target.english),
                     word = target,
-                    type = type
+                    type = type,
+                    typeLabel = "Meaning → Word • معنى إلى كلمة"
+                )
+            }
+            QuizType.MIXED -> {
+                // Default fallback if called directly
+                val options = (distractors.map { it.arabic } + target.arabic).shuffled()
+                QuizQuestion(
+                    prompt = target.english,
+                    subPrompt = target.pronunciation.ifBlank { "${target.level} • ${target.partOfSpeech}" },
+                    options = options,
+                    correctIndex = options.indexOf(target.arabic),
+                    word = target,
+                    type = QuizType.EN_TO_AR,
+                    typeLabel = "Word → Meaning • كلمة إلى معنى"
                 )
             }
             QuizType.LISTENING -> {
                 val options = (distractors.map { it.arabic } + target.arabic).shuffled()
                 QuizQuestion(
-                    prompt = "🎧 Listen & choose meaning",
-                    subPrompt = "Tap audio button to replay",
+                    prompt = "🎧 استمع واختر المعنى الصحيح",
+                    subPrompt = "اضغط على رمز مكبر الصوت لسماع النطق مرة أخرى",
                     options = options,
                     correctIndex = options.indexOf(target.arabic),
                     word = target,
-                    type = type
+                    type = type,
+                    typeLabel = "Listening Challenge • تحدي الاستماع"
                 )
             }
             QuizType.SENTENCE_COMPLETION -> {
@@ -459,7 +521,8 @@ class WordViewModel(application: Application) : AndroidViewModel(application) {
                     options = options,
                     correctIndex = options.indexOf(target.english),
                     word = target,
-                    type = type
+                    type = type,
+                    typeLabel = "Sentence Completion • إكمال الجملة"
                 )
             }
             QuizType.SPELLING -> {
@@ -471,7 +534,8 @@ class WordViewModel(application: Application) : AndroidViewModel(application) {
                     correctIndex = 0,
                     word = target,
                     type = type,
-                    scrambledLetters = letters
+                    scrambledLetters = letters,
+                    typeLabel = "Spelling • تحدي التهجئة"
                 )
             }
             QuizType.CATEGORY, QuizType.FAVORITES -> {
@@ -482,7 +546,8 @@ class WordViewModel(application: Application) : AndroidViewModel(application) {
                     options = options,
                     correctIndex = options.indexOf(target.arabic),
                     word = target,
-                    type = type
+                    type = type,
+                    typeLabel = if (type == QuizType.FAVORITES) "Favorites Quiz • اختبار المفضلة" else "Category Quiz • اختبار التصنيف"
                 )
             }
         }
@@ -491,6 +556,50 @@ class WordViewModel(application: Application) : AndroidViewModel(application) {
     fun selectQuizOption(index: Int) {
         if (_quizState.value.isAnswerChecked) return
         _quizState.value = _quizState.value.copy(selectedOptionIndex = index)
+    }
+
+    fun selectAndCheckQuizOption(index: Int) {
+        val state = _quizState.value
+        if (state.isAnswerChecked) return
+        val question = state.questions.getOrNull(state.currentIndex) ?: return
+
+        val isCorrect = (index == question.correctIndex)
+        val newStreak = if (isCorrect) state.currentStreak + 1 else 0
+        val newBestStreak = maxOf(state.bestStreak, newStreak)
+        val streakBonus = if (isCorrect && newStreak > 1) (newStreak - 1) * 2 else 0
+        val pointsEarned = if (isCorrect) 10 + streakBonus else 0
+
+        viewModelScope.launch {
+            if (isCorrect) {
+                repository.recordFlashcardAnswer(question.word.id, FlashcardAnswer.KNOWN)
+            } else {
+                repository.recordFlashcardAnswer(question.word.id, FlashcardAnswer.DONT_KNOW)
+            }
+        }
+
+        _quizState.value = state.copy(
+            selectedOptionIndex = index,
+            isAnswerChecked = true,
+            isCorrect = isCorrect,
+            score = state.score + pointsEarned,
+            correctCount = if (isCorrect) state.correctCount + 1 else state.correctCount,
+            wrongCount = if (!isCorrect) state.wrongCount + 1 else state.wrongCount,
+            currentStreak = newStreak,
+            bestStreak = newBestStreak
+        )
+
+        // Pronounce English word upon answering
+        if (isCorrect && question.type != QuizType.LISTENING) {
+            speakWord(question.word.english)
+        }
+    }
+
+    fun setAutoAdvance(enabled: Boolean) {
+        _quizState.value = _quizState.value.copy(autoAdvance = enabled)
+    }
+
+    fun exitQuiz() {
+        _quizState.value = QuizState(isActive = false)
     }
 
     fun updateSpelledAnswer(letter: Char) {
@@ -627,6 +736,223 @@ class WordViewModel(application: Application) : AndroidViewModel(application) {
                 userMessage.value = "Restore failed: ${e.localizedMessage}"
             }
         }
+    }
+
+    fun getWordsForCategory(categoryName: String): Flow<List<Word>> {
+        return repository.getWordsByCategory(categoryName)
+    }
+
+    fun updateCategoryColor(category: CategoryEntity, newColorHex: String) {
+        viewModelScope.launch {
+            repository.insertOrUpdateCategory(category.copy(colorHex = newColorHex))
+        }
+    }
+
+    fun updateCategoryIcon(category: CategoryEntity, newIconName: String) {
+        viewModelScope.launch {
+            repository.insertOrUpdateCategory(category.copy(iconName = newIconName))
+        }
+    }
+
+    fun renameCategory(category: CategoryEntity, newName: String) {
+        viewModelScope.launch {
+            repository.renameCategory(category, newName)
+        }
+    }
+
+    fun deleteCategory(category: CategoryEntity) {
+        viewModelScope.launch {
+            repository.deleteCategory(category)
+        }
+    }
+
+    fun addWordToCategory(
+        category: String,
+        english: String,
+        arabic: String,
+        meaning: String = "",
+        level: String = "A1",
+        pos: String = "Noun",
+        example: String = "",
+        exampleAr: String = ""
+    ) {
+        viewModelScope.launch {
+            val word = Word(
+                english = english.trim(),
+                arabic = arabic.trim(),
+                category = category,
+                subcategory = meaning.trim(),
+                level = level,
+                partOfSpeech = pos,
+                example = example.trim(),
+                exampleArabic = exampleAr.trim(),
+                createdAt = System.currentTimeMillis(),
+                updatedAt = System.currentTimeMillis()
+            )
+            repository.insertOrUpdateWord(word)
+        }
+    }
+
+    fun updateWordInline(word: Word) {
+        viewModelScope.launch {
+            repository.insertOrUpdateWord(word.copy(updatedAt = System.currentTimeMillis()))
+        }
+    }
+
+    fun deleteWordPermanently(id: Long) {
+        viewModelScope.launch {
+            repository.deletePermanently(id)
+        }
+    }
+
+    fun importWordsIntoCategory(
+        uri: Uri,
+        categoryName: String,
+        onComplete: (imported: Int, updated: Int) -> Unit
+    ) {
+        viewModelScope.launch {
+            try {
+                val existing = repository.allActiveWords.first()
+                val (result, words) = importExportManager.importCategoryWords(uri, categoryName, existing)
+                if (words.isNotEmpty()) {
+                    repository.insertBatch(words)
+                    userMessage.value = "تم استيراد ${result.imported} كلمة بنجاح إلى تصنيف $categoryName"
+                    onComplete(result.imported, result.updated)
+                } else {
+                    userMessage.value = "لم يتم العثور على كلمات صالحة في الملف"
+                }
+            } catch (e: Exception) {
+                userMessage.value = "فشل الاستيراد: ${e.localizedMessage}"
+            }
+        }
+    }
+
+    fun importArticlesFromFile(
+        uri: Uri,
+        onComplete: (imported: Int) -> Unit
+    ) {
+        viewModelScope.launch {
+            try {
+                val (result, articles) = importExportManager.importArticles(uri)
+                if (articles.isNotEmpty()) {
+                    repository.insertArticlesBatch(articles)
+                    userMessage.value = "تم استيراد ${result.imported} مقالاً بنجاح"
+                    onComplete(result.imported)
+                } else {
+                    userMessage.value = "لم يتم العثور على مقالات صالحة في الملف"
+                }
+            } catch (e: Exception) {
+                userMessage.value = "فشل استيراد المقالات: ${e.localizedMessage}"
+            }
+        }
+    }
+
+    fun insertOrUpdateArticle(article: Article) {
+        viewModelScope.launch {
+            repository.insertOrUpdateArticle(article)
+            userMessage.value = if (article.id == 0L) "تم إضافة المقال بنجاح" else "تم تحديث المقال بنجاح"
+        }
+    }
+
+    fun deleteArticle(id: Long) {
+        viewModelScope.launch {
+            repository.deleteArticle(id)
+            userMessage.value = "تم حذف المقال"
+        }
+    }
+
+    fun moveArticleUp(article: Article) {
+        viewModelScope.launch {
+            val currentList = repository.allArticles.first()
+            val index = currentList.indexOfFirst { it.id == article.id }
+            if (index > 0) {
+                val mutable = currentList.toMutableList()
+                val prev = mutable[index - 1]
+                mutable[index - 1] = article.copy(orderIndex = prev.orderIndex)
+                mutable[index] = prev.copy(orderIndex = article.orderIndex)
+                // Re-index cleanly
+                val updated = mutable.mapIndexed { idx, art -> art.copy(orderIndex = idx + 1) }
+                repository.reorderArticles(updated)
+            }
+        }
+    }
+
+    fun moveArticleDown(article: Article) {
+        viewModelScope.launch {
+            val currentList = repository.allArticles.first()
+            val index = currentList.indexOfFirst { it.id == article.id }
+            if (index >= 0 && index < currentList.size - 1) {
+                val mutable = currentList.toMutableList()
+                val next = mutable[index + 1]
+                mutable[index + 1] = article.copy(orderIndex = next.orderIndex)
+                mutable[index] = next.copy(orderIndex = article.orderIndex)
+                val updated = mutable.mapIndexed { idx, art -> art.copy(orderIndex = idx + 1) }
+                repository.reorderArticles(updated)
+            }
+        }
+    }
+
+    fun reorderArticles(articles: List<Article>) {
+        viewModelScope.launch {
+            val updated = articles.mapIndexed { idx, art -> art.copy(orderIndex = idx + 1) }
+            repository.reorderArticles(updated)
+        }
+    }
+
+    fun moveCategoryUp(category: CategoryEntity) {
+        viewModelScope.launch {
+            val currentList = repository.allCategories.first()
+            val index = currentList.indexOfFirst { it.id == category.id }
+            if (index > 0) {
+                val mutable = currentList.toMutableList()
+                val prev = mutable[index - 1]
+                mutable[index - 1] = category.copy(orderIndex = prev.orderIndex)
+                mutable[index] = prev.copy(orderIndex = category.orderIndex)
+                val updated = mutable.mapIndexed { idx, cat -> cat.copy(orderIndex = idx + 1) }
+                repository.reorderCategories(updated)
+            }
+        }
+    }
+
+    fun moveCategoryDown(category: CategoryEntity) {
+        viewModelScope.launch {
+            val currentList = repository.allCategories.first()
+            val index = currentList.indexOfFirst { it.id == category.id }
+            if (index >= 0 && index < currentList.size - 1) {
+                val mutable = currentList.toMutableList()
+                val next = mutable[index + 1]
+                mutable[index + 1] = category.copy(orderIndex = next.orderIndex)
+                mutable[index] = next.copy(orderIndex = category.orderIndex)
+                val updated = mutable.mapIndexed { idx, cat -> cat.copy(orderIndex = idx + 1) }
+                repository.reorderCategories(updated)
+            }
+        }
+    }
+
+    fun reorderCategories(categories: List<CategoryEntity>) {
+        viewModelScope.launch {
+            val updated = categories.mapIndexed { idx, cat -> cat.copy(orderIndex = idx + 1) }
+            repository.reorderCategories(updated)
+        }
+    }
+
+    fun resetCategoriesOrder() {
+        viewModelScope.launch {
+            val current = repository.allCategories.first()
+            val orderMap = CategoryEntity.DEFAULT_CATEGORIES.mapIndexed { index, cat -> cat.id to (index + 1) }.toMap()
+            val sorted = current.sortedBy { orderMap[it.id] ?: (it.orderIndex + 100) }
+                .mapIndexed { idx, cat -> cat.copy(orderIndex = idx + 1) }
+            repository.reorderCategories(sorted)
+            userMessage.value = "تمت استعادة الترتيب الافتراضي للتصنيفات"
+        }
+    }
+
+    fun resetDefaultCategories() {
+        resetCategoriesOrder()
+    }
+
+    fun speakEnglish(text: String) {
+        speakWord(text)
     }
 
     override fun onCleared() {
