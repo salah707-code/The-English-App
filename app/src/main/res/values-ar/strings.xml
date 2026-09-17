@@ -10,6 +10,7 @@
     <string name="nav_quiz">اختبار</string>
     <string name="nav_favorites">المفضلة</string>
     <string name="nav_stats">الإحصائيات</string>
+    <string name="nav_categories">التصنيفات</string>
     <string name="nav_settings">الإعدادات</string>
     <string name="nav_trash">سلة المحذوفات</string>
     <string name="nav_mastered">المتقنة</string>
