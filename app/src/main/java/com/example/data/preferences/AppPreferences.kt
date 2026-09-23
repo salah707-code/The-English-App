@@ -40,6 +40,64 @@ class AppPreferences(context: Context) {
     private val _wordsLearnedToday = MutableStateFlow(getLearnedTodayCountInternal())
     val wordsLearnedToday: StateFlow<Int> = _wordsLearnedToday.asStateFlow()
 
+    // Profile Settings
+    private val _userName = MutableStateFlow(prefs.getString(KEY_USER_NAME, "المتعلّم") ?: "المتعلّم")
+    val userName: StateFlow<String> = _userName.asStateFlow()
+
+    private val _profileImageUri = MutableStateFlow(prefs.getString(KEY_PROFILE_IMAGE_URI, "") ?: "")
+    val profileImageUri: StateFlow<String> = _profileImageUri.asStateFlow()
+
+    // App Lock (PIN / Security)
+    private val _isAppLockEnabled = MutableStateFlow(prefs.getBoolean(KEY_APP_LOCK_ENABLED, false))
+    val isAppLockEnabled: StateFlow<Boolean> = _isAppLockEnabled.asStateFlow()
+
+    private val _appLockPin = MutableStateFlow(prefs.getString(KEY_APP_LOCK_PIN, "") ?: "")
+    val appLockPin: StateFlow<String> = _appLockPin.asStateFlow()
+
+    // Transient session unlock state
+    val isSessionUnlocked = MutableStateFlow(!_isAppLockEnabled.value || _appLockPin.value.isBlank())
+
+    fun setUserName(name: String) {
+        val cleanName = name.trim().ifBlank { "المتعلّم" }
+        prefs.edit().putString(KEY_USER_NAME, cleanName).apply()
+        _userName.value = cleanName
+    }
+
+    fun setProfileImageUri(uriString: String) {
+        prefs.edit().putString(KEY_PROFILE_IMAGE_URI, uriString).apply()
+        _profileImageUri.value = uriString
+    }
+
+    fun setAppLock(enabled: Boolean, pin: String) {
+        prefs.edit()
+            .putBoolean(KEY_APP_LOCK_ENABLED, enabled)
+            .putString(KEY_APP_LOCK_PIN, pin)
+            .apply()
+        _isAppLockEnabled.value = enabled
+        _appLockPin.value = pin
+        if (!enabled) {
+            isSessionUnlocked.value = true
+        }
+    }
+
+    fun unlockSession(enteredPin: String): Boolean {
+        if (!_isAppLockEnabled.value || _appLockPin.value.isBlank()) {
+            isSessionUnlocked.value = true
+            return true
+        }
+        val isCorrect = enteredPin == _appLockPin.value
+        if (isCorrect) {
+            isSessionUnlocked.value = true
+        }
+        return isCorrect
+    }
+
+    fun lockSession() {
+        if (_isAppLockEnabled.value && _appLockPin.value.isNotBlank()) {
+            isSessionUnlocked.value = false
+        }
+    }
+
     fun setLanguage(lang: String) {
         prefs.edit().putString(KEY_LANGUAGE, lang).apply()
         _language.value = lang
@@ -149,5 +207,9 @@ class AppPreferences(context: Context) {
         const val KEY_STREAK = "key_streak"
         const val KEY_LAST_DATE = "key_last_date"
         const val KEY_TODAY_COUNT = "key_today_count"
+        const val KEY_USER_NAME = "key_user_name"
+        const val KEY_PROFILE_IMAGE_URI = "key_profile_image_uri"
+        const val KEY_APP_LOCK_ENABLED = "key_app_lock_enabled"
+        const val KEY_APP_LOCK_PIN = "key_app_lock_pin"
     }
 }

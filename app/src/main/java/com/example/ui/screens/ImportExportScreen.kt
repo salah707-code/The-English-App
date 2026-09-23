@@ -2,8 +2,10 @@ package com.example.ui.screens
 
 import android.content.Intent
 import android.net.Uri
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import com.example.data.model.AffixEntity
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -21,6 +23,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Backup
 import androidx.compose.material.icons.filled.Description
+import androidx.compose.material.icons.filled.Extension
 import androidx.compose.material.icons.filled.FileDownload
 import androidx.compose.material.icons.filled.FileUpload
 import androidx.compose.material.icons.filled.Restore
@@ -85,6 +88,20 @@ fun ImportExportScreen(
         uri?.let {
             selectedFileUri = it
             viewModel.loadImportFile(it)
+        }
+    }
+
+    val affixPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument()
+    ) { uri: Uri? ->
+        uri?.let {
+            viewModel.importAffixesFromFile(it, AffixEntity.TYPE_PREFIX) { count, error ->
+                if (error != null) {
+                    Toast.makeText(context, "فشل استيراد السوابق واللواحق: $error", Toast.LENGTH_LONG).show()
+                } else {
+                    Toast.makeText(context, "تم استيراد $count سابقة ولاحقة بنجاح!", Toast.LENGTH_LONG).show()
+                }
+            }
         }
     }
 
@@ -186,6 +203,54 @@ fun ImportExportScreen(
                             Icon(imageVector = Icons.Default.Description, contentDescription = null)
                             Spacer(modifier = Modifier.width(8.dp))
                             Text("Download Sample CSV Template")
+                        }
+                    }
+                }
+            }
+
+            // Affixes Import Section (السوابق واللواحق)
+            item {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(20.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(20.dp)
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(imageVector = Icons.Default.Extension, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                            Spacer(modifier = Modifier.width(10.dp))
+                            Text(
+                                text = "استيراد السوابق واللواحق (Prefixes & Suffixes)",
+                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        Text(
+                            text = "استيراد ملفات CSV / Excel لقواعد السوابق واللواحق مع معانيها ووظائفها وأمثلتها وتخزينها محلياً.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        Button(
+                            onClick = { affixPickerLauncher.launch(arrayOf("text/*", "application/*", "*/*")) },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(50.dp)
+                                .testTag("btn_import_affixes"),
+                            shape = RoundedCornerShape(14.dp)
+                        ) {
+                            Icon(imageVector = Icons.Default.FileUpload, contentDescription = null)
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("اختيار ملف السوابق واللواحق (CSV / Excel)")
                         }
                     }
                 }

@@ -16,6 +16,7 @@ sealed class Screen(val route: String) {
         fun createRoute(categoryId: String) = "category_detail/$categoryId"
     }
     object Articles : Screen("articles")
+    object Affixes : Screen("affixes")
     object ImportExport : Screen("import_export")
     object Settings : Screen("settings")
 }

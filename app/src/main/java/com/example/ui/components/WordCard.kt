@@ -50,6 +50,10 @@ import com.example.ui.theme.LevelC1Color
 import com.example.ui.theme.LevelC2Color
 import com.example.ui.theme.StarGold
 
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.runtime.CompositionLocalProvider
+
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun WordCard(
@@ -59,7 +63,6 @@ fun WordCard(
     onFavoriteClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val levelColor = getLevelColor(word.level)
     val starColor by animateColorAsState(
         targetValue = if (word.isFavorite) StarGold else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
         label = "star_color"
@@ -91,22 +94,26 @@ fun WordCard(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.weight(1f)
                 ) {
-                    Text(
-                        text = word.english,
-                        style = MaterialTheme.typography.titleLarge.copy(
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 20.sp
-                        ),
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
+                    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                        Text(
+                            text = word.english,
+                            style = MaterialTheme.typography.titleLarge.copy(
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 20.sp
+                            ),
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
 
                     if (word.pronunciation.isNotBlank()) {
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = word.pronunciation,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+                        CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                            Text(
+                                text = word.pronunciation,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
                     }
                 }
 
@@ -158,20 +165,6 @@ fun WordCard(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalArrangement = Arrangement.spacedBy(6.dp)
             ) {
-                // Level Tag
-                Surface(
-                    shape = RoundedCornerShape(8.dp),
-                    color = levelColor.copy(alpha = 0.12f),
-                    border = CardDefaults.outlinedCardBorder().copy(brush = androidx.compose.ui.graphics.SolidColor(levelColor.copy(alpha = 0.3f)))
-                ) {
-                    Text(
-                        text = word.level,
-                        style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
-                        color = levelColor,
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
-                    )
-                }
-
                 // Part of Speech Tag
                 Surface(
                     shape = RoundedCornerShape(8.dp),

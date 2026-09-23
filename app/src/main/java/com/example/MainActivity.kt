@@ -34,6 +34,8 @@ import androidx.navigation.navArgument
 import com.example.data.model.CategoryEntity
 import com.example.ui.components.AppBottomNav
 import com.example.ui.navigation.Screen
+import com.example.ui.screens.AffixesScreen
+import com.example.ui.screens.AppLockScreen
 import com.example.ui.screens.ArticlesManagementScreen
 import com.example.ui.screens.CategoryDetailTableScreen
 import com.example.ui.screens.CategoryManagementScreen
@@ -64,6 +66,8 @@ class MainActivity : ComponentActivity() {
         setContent {
             val language by viewModel.preferences.language.collectAsStateWithLifecycle()
             val themeMode by viewModel.preferences.themeMode.collectAsStateWithLifecycle()
+            val isAppLockEnabled by viewModel.isAppLockEnabled.collectAsStateWithLifecycle()
+            val isSessionUnlocked by viewModel.isSessionUnlocked.collectAsStateWithLifecycle()
 
             // Update Configuration with dynamic locale
             val targetLocale = if (language == "ar") Locale("ar") else Locale("en")
@@ -80,7 +84,14 @@ class MainActivity : ComponentActivity() {
                 LocalLayoutDirection provides layoutDirection
             ) {
                 EnglishLearnTheme(themeMode = themeMode) {
-                    MainAppNavHost(viewModel = viewModel)
+                    if (isAppLockEnabled && !isSessionUnlocked) {
+                        AppLockScreen(
+                            viewModel = viewModel,
+                            onUnlocked = { /* unlocked */ }
+                        )
+                    } else {
+                        MainAppNavHost(viewModel = viewModel)
+                    }
                 }
             }
         }
@@ -245,6 +256,13 @@ fun MainAppNavHost(viewModel: WordViewModel) {
 
             composable(Screen.ImportExport.route) {
                 ImportExportScreen(
+                    viewModel = viewModel,
+                    onNavigateBack = { navController.popBackStack() }
+                )
+            }
+
+            composable(Screen.Affixes.route) {
+                AffixesScreen(
                     viewModel = viewModel,
                     onNavigateBack = { navController.popBackStack() }
                 )

@@ -55,7 +55,14 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.material.icons.filled.Extension
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.unit.LayoutDirection
+import coil.compose.AsyncImage
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
@@ -83,16 +90,54 @@ fun HomeScreen(
     val stats by viewModel.learningStats.collectAsStateWithLifecycle()
     val dueWords by viewModel.dueForReviewWords.collectAsStateWithLifecycle()
     val allWords by viewModel.allWords.collectAsStateWithLifecycle()
+    val userName by viewModel.userName.collectAsStateWithLifecycle()
+    val profileImageUri by viewModel.profileImageUri.collectAsStateWithLifecycle()
 
     Scaffold(
         topBar = {
             TopAppBar(
                 title = {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            text = stringResource(R.string.home_title),
-                            style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold)
-                        )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.clickable { onNavigate(Screen.Settings.route) }
+                    ) {
+                        Surface(
+                            shape = CircleShape,
+                            color = MaterialTheme.colorScheme.primaryContainer,
+                            modifier = Modifier.size(38.dp)
+                        ) {
+                            if (profileImageUri.isNotBlank()) {
+                                AsyncImage(
+                                    model = profileImageUri,
+                                    contentDescription = "Profile Photo",
+                                    contentScale = ContentScale.Crop,
+                                    modifier = Modifier.fillMaxSize()
+                                )
+                            } else {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Text(
+                                        text = userName.take(1).uppercase(),
+                                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                                    )
+                                }
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.width(10.dp))
+
+                        Column {
+                            Text(
+                                text = "مرحباً، $userName",
+                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                                maxLines = 1
+                            )
+                            Text(
+                                text = stringResource(R.string.home_title),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        }
                     }
                 },
                 actions = {
@@ -260,13 +305,13 @@ fun HomeScreen(
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         ShortcutButton(
-                            title = "إدارة التصنيفات",
-                            subtitle = "19 تصنيفاً • شبكة وجداول",
-                            icon = Icons.Default.Category,
+                            title = "السوابق واللواحق",
+                            subtitle = "Prefixes & Suffixes",
+                            icon = Icons.Default.Extension,
                             containerColor = MaterialTheme.colorScheme.primaryContainer,
                             contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
                             modifier = Modifier.weight(1f),
-                            onClick = { onNavigate(Screen.Categories.route) }
+                            onClick = { onNavigate(Screen.Affixes.route) }
                         )
 
                         ShortcutButton(
@@ -285,8 +330,8 @@ fun HomeScreen(
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         ShortcutButton(
-                            title = "استيراد وتصدير",
-                            subtitle = "Excel, CSV & JSON",
+                            title = "إدارة البيانات",
+                            subtitle = "استيراد وتصدير ونسخ احتياطي",
                             icon = Icons.Default.FileUpload,
                             containerColor = MaterialTheme.colorScheme.surfaceVariant,
                             contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -311,7 +356,7 @@ fun HomeScreen(
                     )
 
                     TextButton(onClick = { onNavigate(Screen.Categories.route) }) {
-                        Text("إدارة التصنيفات (19)", fontWeight = FontWeight.Bold)
+                        Text("عرض الكل (19)", fontWeight = FontWeight.Bold)
                     }
                 }
 
@@ -370,11 +415,13 @@ fun HeroProgressCard(
                         style = MaterialTheme.typography.labelLarge,
                         color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f)
                     )
-                    Text(
-                        text = "${stats.wordsLearnedToday} / ${stats.dailyGoal}",
-                        style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
-                        color = MaterialTheme.colorScheme.onPrimary
-                    )
+                    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                        Text(
+                            text = "${stats.wordsLearnedToday} / ${stats.dailyGoal}",
+                            style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
+                            color = MaterialTheme.colorScheme.onPrimary
+                        )
+                    }
                 }
 
                 Surface(

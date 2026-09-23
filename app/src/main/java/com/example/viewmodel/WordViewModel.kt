@@ -9,6 +9,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.audio.TtsManager
 import com.example.data.database.AppDatabase
+import com.example.data.model.AffixEntity
 import com.example.data.model.Article
 import com.example.data.model.CategoryEntity
 import com.example.data.model.LearningStats
@@ -28,6 +29,10 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import java.io.BufferedReader
+import java.io.InputStreamReader
 
 enum class SortOrder {
     AZ,
@@ -92,7 +97,7 @@ class WordViewModel(application: Application) : AndroidViewModel(application) {
 
     private val db = AppDatabase.getInstance(application)
     val preferences = AppPreferences(application)
-    val repository = WordRepository(db.wordDao(), db.categoryDao(), db.articleDao(), preferences)
+    val repository = WordRepository(db.wordDao(), db.categoryDao(), db.articleDao(), db.affixDao(), preferences)
     val importExportManager = DataImportExportManager(application)
     val ttsManager = TtsManager(application)
 
@@ -109,6 +114,21 @@ class WordViewModel(application: Application) : AndroidViewModel(application) {
 
     val articlesCount: StateFlow<Int> = repository.articlesCount
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)
+
+    // Affix flows (Prefixes & Suffixes)
+    val allPrefixes: StateFlow<List<AffixEntity>> = repository.allPrefixes
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val allSuffixes: StateFlow<List<AffixEntity>> = repository.allSuffixes
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val affixSearchQuery = MutableStateFlow("")
+
+    // Profile & App Lock states
+    val userName: StateFlow<String> = preferences.userName
+    val profileImageUri: StateFlow<String> = preferences.profileImageUri
+    val isAppLockEnabled: StateFlow<Boolean> = preferences.isAppLockEnabled
+    val isSessionUnlocked: StateFlow<Boolean> = preferences.isSessionUnlocked
 
     // Filter and Sort states
     val searchQuery = MutableStateFlow("")
@@ -312,8 +332,118 @@ class WordViewModel(application: Application) : AndroidViewModel(application) {
     fun resetAndLoadSampleData() {
         viewModelScope.launch {
             repository.resetAndLoadStarterData()
-            userMessage.value = "Sample vocabulary loaded!"
+            userMessage.value = "تمت استعادة البيانات ونماذج الكلمات والسوابق واللواحق!"
         }
+    }
+
+    // Affix Operations
+    fun searchPrefixes(query: String): Flow<List<AffixEntity>> {
+        return repository.searchAffixes(query, AffixEntity.TYPE_PREFIX)
+    }
+
+    fun searchSuffixes(query: String): Flow<List<AffixEntity>> {
+        return repository.searchAffixes(query, AffixEntity.TYPE_SUFFIX)
+    }
+
+    fun addAffix(affix: AffixEntity) {
+        viewModelScope.launch {
+            repository.insertAffix(affix)
+        }
+    }
+
+    fun updateAffix(affix: AffixEntity) {
+        viewModelScope.launch {
+            repository.updateAffix(affix)
+        }
+    }
+
+    fun deleteAffix(affix: AffixEntity) {
+        viewModelScope.launch {
+            repository.deleteAffix(affix)
+        }
+    }
+
+    fun resetAffixesToDefault() {
+        viewModelScope.launch {
+            repository.resetAffixesToDefault()
+        }
+    }
+
+    fun importAffixesFromFile(uri: Uri, targetType: String, onComplete: (Int, String?) -> Unit) {
+        viewModelScope.launch {
+            try {
+                val context = getApplication<Application>()
+                val items = withContext(Dispatchers.IO) {
+                    val list = mutableListOf<AffixEntity>()
+                    context.contentResolver.openInputStream(uri)?.use { inputStream ->
+                        BufferedReader(InputStreamReader(inputStream, Charsets.UTF_8)).useLines { lines ->
+                            lines.forEachIndexed { index, line ->
+                                val trimmed = line.trim()
+                                if (trimmed.isNotBlank() && !trimmed.startsWith("#")) {
+                                    // Skip header row if contains 'affix' or 'prefix' or 'suffix' or 'سابقة'
+                                    if (index == 0 && (trimmed.contains("affix", ignoreCase = true) || trimmed.contains("prefix", ignoreCase = true) || trimmed.contains("لاحقة") || trimmed.contains("سابقة"))) {
+                                        return@forEachIndexed
+                                    }
+                                    // Support CSV (comma), TSV (tab), or semicolon delimiter
+                                    val delimiter = when {
+                                        trimmed.contains("\t") -> "\t"
+                                        trimmed.contains(";") -> ";"
+                                        else -> ","
+                                    }
+                                    val parts = trimmed.split(delimiter).map { it.trim().removeSurrounding("\"") }
+                                    if (parts.isNotEmpty() && parts[0].isNotBlank()) {
+                                        val affixStr = parts[0]
+                                        val meaningStr = if (parts.size > 1) parts[1] else ""
+                                        val examplesStr = if (parts.size > 2) parts[2] else ""
+                                        val noteStr = if (parts.size > 3) parts[3] else ""
+                                        list.add(
+                                            AffixEntity(
+                                                type = targetType,
+                                                affix = affixStr,
+                                                meaning = meaningStr,
+                                                examples = examplesStr,
+                                                notes = noteStr
+                                            )
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    list
+                }
+
+                if (items.isNotEmpty()) {
+                    repository.insertAffixes(items)
+                    onComplete(items.size, null)
+                } else {
+                    onComplete(0, "لم يتم العثور على أسطر صالحة في الملف")
+                }
+            } catch (e: Exception) {
+                onComplete(0, e.localizedMessage ?: "حدث خطأ أثناء قراءة الملف")
+            }
+        }
+    }
+
+    // Profile & App Lock Operations
+    fun setUserName(name: String) {
+        preferences.setUserName(name)
+    }
+
+    fun setProfileImageUri(uriString: String) {
+        preferences.setProfileImageUri(uriString)
+    }
+
+    fun setAppLock(enabled: Boolean, pin: String) {
+        preferences.setAppLock(enabled, pin)
+    }
+
+    fun unlockSession(pin: String): Boolean {
+        return preferences.unlockSession(pin)
+    }
+
+    fun lockSession() {
+        preferences.lockSession()
     }
 
     // Audio Methods

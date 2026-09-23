@@ -1,6 +1,6 @@
 <resources>
-    <string name="app_name">Learn English</string>
-    <string name="app_tagline">Master vocabulary with smart spaced repetition</string>
+    <string name="app_name">الخُلاصة</string>
+    <string name="app_tagline">الخُلاصة - رفيقك الشامل لتعلم الإنجليزية والمفردات والقواعد</string>
 
     <!-- Navigation -->
     <string name="nav_home">Home</string>

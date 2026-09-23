@@ -1,8 +1,10 @@
 package com.example.data.repository
 
+import com.example.data.database.AffixDao
 import com.example.data.database.ArticleDao
 import com.example.data.database.CategoryDao
 import com.example.data.database.WordDao
+import com.example.data.model.AffixEntity
 import com.example.data.model.Article
 import com.example.data.model.CategoryEntity
 import com.example.data.model.LearningStats
@@ -21,6 +23,7 @@ class WordRepository(
     private val wordDao: WordDao,
     private val categoryDao: CategoryDao,
     private val articleDao: ArticleDao,
+    private val affixDao: AffixDao,
     private val appPreferences: AppPreferences
 ) {
 
@@ -35,6 +38,9 @@ class WordRepository(
 
     val allArticles: Flow<List<Article>> = articleDao.getAllArticles()
     val articlesCount: Flow<Int> = articleDao.getArticlesCount()
+
+    val allPrefixes: Flow<List<AffixEntity>> = affixDao.getAffixesByType(AffixEntity.TYPE_PREFIX)
+    val allSuffixes: Flow<List<AffixEntity>> = affixDao.getAffixesByType(AffixEntity.TYPE_SUFFIX)
 
     fun getWordsByCategory(category: String): Flow<List<Word>> {
         return wordDao.getWordsByCategory(category)
@@ -75,6 +81,11 @@ class WordRepository(
         if (articlesCount == 0) {
             articleDao.insertAll(StarterArticles.getStarterArticles())
         }
+
+        // Initialize starter prefixes & suffixes if none exist
+        if (affixDao.getCount() == 0) {
+            affixDao.insertAll(AffixEntity.DEFAULT_PREFIXES + AffixEntity.DEFAULT_SUFFIXES)
+        }
     }
 
     suspend fun ensureDefaultCategories() = withContext(Dispatchers.IO) {
@@ -101,6 +112,38 @@ class WordRepository(
         wordDao.insertAll(starter)
         articleDao.clearAll()
         articleDao.insertAll(StarterArticles.getStarterArticles())
+        affixDao.deleteAll()
+        affixDao.insertAll(AffixEntity.DEFAULT_PREFIXES + AffixEntity.DEFAULT_SUFFIXES)
+    }
+
+    // Affix (Prefix & Suffix) operations
+    fun searchAffixes(query: String, type: String): Flow<List<AffixEntity>> {
+        return if (query.isBlank()) {
+            affixDao.getAffixesByType(type)
+        } else {
+            affixDao.searchAffixes(query.trim(), type)
+        }
+    }
+
+    suspend fun insertAffixes(affixes: List<AffixEntity>) = withContext(Dispatchers.IO) {
+        affixDao.insertAll(affixes)
+    }
+
+    suspend fun insertAffix(affix: AffixEntity) = withContext(Dispatchers.IO) {
+        affixDao.insert(affix)
+    }
+
+    suspend fun updateAffix(affix: AffixEntity) = withContext(Dispatchers.IO) {
+        affixDao.update(affix)
+    }
+
+    suspend fun deleteAffix(affix: AffixEntity) = withContext(Dispatchers.IO) {
+        affixDao.delete(affix)
+    }
+
+    suspend fun resetAffixesToDefault() = withContext(Dispatchers.IO) {
+        affixDao.deleteAll()
+        affixDao.insertAll(AffixEntity.DEFAULT_PREFIXES + AffixEntity.DEFAULT_SUFFIXES)
     }
 
     // Article operations

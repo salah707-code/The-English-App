@@ -795,26 +795,17 @@ fun TableRowItem(
         verticalAlignment = Alignment.CenterVertically
     ) {
         // 1. الكلمة (Word)
-        Row(
+        Box(
             modifier = Modifier.width(160.dp),
-            verticalAlignment = Alignment.CenterVertically
+            contentAlignment = Alignment.CenterStart
         ) {
-            Text(
-                text = word.english,
-                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
-                modifier = Modifier.weight(1f),
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-            Surface(
-                shape = RoundedCornerShape(6.dp),
-                color = categoryColor.copy(alpha = 0.15f)
-            ) {
+            CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
                 Text(
-                    text = word.level,
-                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                    color = categoryColor,
-                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                    text = word.english,
+                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
+                    modifier = Modifier.fillMaxWidth().padding(end = 4.dp),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
         }

@@ -1,6 +1,6 @@
 <resources>
-    <string name="app_name">تعلّم الإنجليزية</string>
-    <string name="app_tagline">أتقن المفردات مع نظام التكرار المتباعد الذكي</string>
+    <string name="app_name">الخُلاصة</string>
+    <string name="app_tagline">الخُلاصة - رفيقك الشامل لتعلم المفردات والقواعد والسوابق واللواحق</string>
 
     <!-- Navigation -->
     <string name="nav_home">الرئيسية</string>
@@ -16,7 +16,7 @@
     <string name="nav_mastered">المتقنة</string>
 
     <!-- Home Screen -->
-    <string name="home_title">تعلّم الإنجليزية</string>
+    <string name="home_title">الخُلاصة</string>
     <string name="home_subtitle">رحلتك اليومية لإتقان المفردات</string>
     <string name="home_start_learning">ابدأ التعلّم</string>
     <string name="home_todays_words">هدف اليوم</string>
