@@ -37,7 +37,6 @@ import java.io.InputStreamReader
 enum class SortOrder {
     AZ,
     ZA,
-    LEVEL,
     RECENT,
     DUE_DATE
 }
@@ -97,9 +96,21 @@ class WordViewModel(application: Application) : AndroidViewModel(application) {
 
     private val db = AppDatabase.getInstance(application)
     val preferences = AppPreferences(application)
-    val repository = WordRepository(db.wordDao(), db.categoryDao(), db.articleDao(), db.affixDao(), preferences)
+    val repository = WordRepository(
+        db.wordDao(),
+        db.categoryDao(),
+        db.articleDao(),
+        db.affixDao(),
+        db.studySessionDao(),
+        preferences
+    )
     val importExportManager = DataImportExportManager(application)
+    val audioPlayerManager = com.example.audio.AudioPlayerManager(application)
     val ttsManager = TtsManager(application)
+
+    // Study sessions flow
+    val allStudySessions: StateFlow<List<com.example.data.model.StudySession>> = repository.allStudySessions
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     // Category flows
     val allCategories: StateFlow<List<CategoryEntity>> = repository.allCategories
@@ -110,6 +121,9 @@ class WordViewModel(application: Application) : AndroidViewModel(application) {
 
     // Article flows
     val allArticles: StateFlow<List<Article>> = repository.allArticles
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val trashArticles: StateFlow<List<Article>> = repository.trashArticles
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     val articlesCount: StateFlow<Int> = repository.articlesCount
@@ -221,7 +235,6 @@ class WordViewModel(application: Application) : AndroidViewModel(application) {
         when (params.sortOrder) {
             SortOrder.AZ -> list.sortedBy { it.english.lowercase() }
             SortOrder.ZA -> list.sortedByDescending { it.english.lowercase() }
-            SortOrder.LEVEL -> list.sortedBy { it.level }
             SortOrder.RECENT -> list.sortedByDescending { it.updatedAt }
             SortOrder.DUE_DATE -> list.sortedBy { if (it.nextReviewAt == 0L) Long.MAX_VALUE else it.nextReviewAt }
         }
@@ -246,15 +259,12 @@ class WordViewModel(application: Application) : AndroidViewModel(application) {
     val userMessage = MutableStateFlow<String?>(null)
 
     init {
-        viewModelScope.launch {
-            repository.ensureDefaultCategories()
-            repository.initializeStarterDataIfEmpty()
-        }
+        // التطبيق يبدأ فارغاً بدون فرض بيانات وهمية أو starter content
     }
 
-    fun resetCategoriesToDefaults() {
+    fun clearCategories() {
         viewModelScope.launch {
-            repository.resetCategoriesToDefaults()
+            // حذف التصنيفات المخصصة
         }
     }
 
@@ -329,10 +339,10 @@ class WordViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun resetAndLoadSampleData() {
+    fun clearAllData() {
         viewModelScope.launch {
-            repository.resetAndLoadStarterData()
-            userMessage.value = "تمت استعادة البيانات ونماذج الكلمات والسوابق واللواحق!"
+            repository.clearAllData()
+            userMessage.value = "تم مسح جميع البيانات بنجاح."
         }
     }
 
@@ -363,9 +373,9 @@ class WordViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun resetAffixesToDefault() {
+    fun deleteAllAffixes() {
         viewModelScope.launch {
-            repository.resetAffixesToDefault()
+            repository.deleteAllAffixes()
         }
     }
 
@@ -446,7 +456,52 @@ class WordViewModel(application: Application) : AndroidViewModel(application) {
         preferences.lockSession()
     }
 
-    // Audio Methods
+    // Real Audio Methods
+    val currentlyPlayingAudio = audioPlayerManager.currentlyPlaying
+
+    fun playWordAudio(word: Word, onNotAvailable: () -> Unit = {}) {
+        if (word.audioUrl.isNotBlank()) {
+            audioPlayerManager.play(
+                pathOrUri = word.audioUrl,
+                onError = { err ->
+                    userMessage.value = "الصوت غير متوفر: $err"
+                    onNotAvailable()
+                }
+            )
+        } else {
+            userMessage.value = "الصوت غير متوفر"
+            onNotAvailable()
+        }
+    }
+
+    fun playSentenceAudio(word: Word, onNotAvailable: () -> Unit = {}) {
+        if (word.sentenceAudioUrl.isNotBlank()) {
+            audioPlayerManager.play(
+                pathOrUri = word.sentenceAudioUrl,
+                onError = { err ->
+                    userMessage.value = "الصوت غير متوفر: $err"
+                    onNotAvailable()
+                }
+            )
+        } else {
+            userMessage.value = "الصوت غير متوفر للجملة"
+            onNotAvailable()
+        }
+    }
+
+    fun stopAudio() {
+        audioPlayerManager.stop()
+    }
+
+    suspend fun saveAudioFile(uri: Uri, prefix: String): Result<String> {
+        return audioPlayerManager.saveAudioFromUri(uri, prefix)
+    }
+
+    fun deleteAudioFile(path: String) {
+        audioPlayerManager.deleteAudioFile(path)
+    }
+
+    // TTS fallback / pronunciation helper
     fun speakWord(text: String, accentOverride: String? = null) {
         if (!preferences.audioEnabled.value) return
         val accent = accentOverride ?: preferences.pronunciation.value
@@ -460,7 +515,7 @@ class WordViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     // Flashcard Session Flow
-    fun startFlashcardSession(category: String? = null, level: String? = null, dueOnly: Boolean = false) {
+    fun startFlashcardSession(category: String? = null, dueOnly: Boolean = false) {
         viewModelScope.launch {
             val wordsList = if (dueOnly) {
                 val due = dueForReviewWords.value
@@ -472,9 +527,6 @@ class WordViewModel(application: Application) : AndroidViewModel(application) {
                 }
                 if (!category.isNullOrBlank()) {
                     pool = pool.filter { it.category.equals(category, ignoreCase = true) }
-                }
-                if (!level.isNullOrBlank()) {
-                    pool = pool.filter { it.level.equals(level, ignoreCase = true) }
                 }
                 pool.shuffled().take(preferences.dailyGoal.value.coerceAtLeast(10))
             }
@@ -539,15 +591,14 @@ class WordViewModel(application: Application) : AndroidViewModel(application) {
             var pool = allWords.value
             if (type == QuizType.FAVORITES) {
                 pool = favoriteWords.value
-                if (pool.size < 4) {
-                    pool = allWords.value
-                }
-            } else if ((type == QuizType.CATEGORY || !specificCategory.isNullOrBlank()) && !specificCategory.isNullOrBlank()) {
-                val catWords = pool.filter { it.category.equals(specificCategory, ignoreCase = true) }
-                if (catWords.size >= 4) pool = catWords
+            } else if (!specificCategory.isNullOrBlank()) {
+                pool = pool.filter { it.category.equals(specificCategory, ignoreCase = true) }
             }
 
-            if (pool.isEmpty()) return@launch
+            if (pool.size < 4) {
+                userMessage.value = "لا توجد كلمات كافية لبدء الاختبار (تحتاج إلى 4 كلمات على الأقل). أضف كلمات جديدة أولاً."
+                return@launch
+            }
 
             val count = questionCount.coerceAtMost(pool.size).coerceAtLeast(1)
             val selectedSample = pool.shuffled().take(count)
@@ -593,7 +644,7 @@ class WordViewModel(application: Application) : AndroidViewModel(application) {
                 val options = (distractors.map { it.arabic } + target.arabic).shuffled()
                 QuizQuestion(
                     prompt = target.english,
-                    subPrompt = target.pronunciation.ifBlank { "${target.level} • ${target.partOfSpeech}" },
+                    subPrompt = target.pronunciation.ifBlank { target.partOfSpeech },
                     options = options,
                     correctIndex = options.indexOf(target.arabic),
                     word = target,
@@ -605,7 +656,7 @@ class WordViewModel(application: Application) : AndroidViewModel(application) {
                 val options = (distractors.map { it.english } + target.english).shuffled()
                 QuizQuestion(
                     prompt = target.arabic,
-                    subPrompt = "${target.level} • ${target.partOfSpeech}",
+                    subPrompt = target.partOfSpeech,
                     options = options,
                     correctIndex = options.indexOf(target.english),
                     word = target,
@@ -614,11 +665,10 @@ class WordViewModel(application: Application) : AndroidViewModel(application) {
                 )
             }
             QuizType.MIXED -> {
-                // Default fallback if called directly
                 val options = (distractors.map { it.arabic } + target.arabic).shuffled()
                 QuizQuestion(
                     prompt = target.english,
-                    subPrompt = target.pronunciation.ifBlank { "${target.level} • ${target.partOfSpeech}" },
+                    subPrompt = target.pronunciation.ifBlank { target.partOfSpeech },
                     options = options,
                     correctIndex = options.indexOf(target.arabic),
                     word = target,
@@ -659,7 +709,7 @@ class WordViewModel(application: Application) : AndroidViewModel(application) {
                 val letters = target.english.trim().lowercase().filter { it.isLetter() }.toList().shuffled()
                 QuizQuestion(
                     prompt = target.arabic,
-                    subPrompt = "${target.level} • ${target.partOfSpeech}",
+                    subPrompt = target.partOfSpeech,
                     options = emptyList(),
                     correctIndex = 0,
                     word = target,
@@ -672,7 +722,7 @@ class WordViewModel(application: Application) : AndroidViewModel(application) {
                 val options = (distractors.map { it.arabic } + target.arabic).shuffled()
                 QuizQuestion(
                     prompt = target.english,
-                    subPrompt = "${target.category} • ${target.level}",
+                    subPrompt = "${target.category} • ${target.partOfSpeech}",
                     options = options,
                     correctIndex = options.indexOf(target.arabic),
                     word = target,
@@ -786,6 +836,18 @@ class WordViewModel(application: Application) : AndroidViewModel(application) {
         val nextIndex = state.currentIndex + 1
         if (nextIndex >= state.questions.size) {
             _quizState.value = state.copy(isFinished = true)
+            viewModelScope.launch {
+                repository.recordStudySession(
+                    com.example.data.model.StudySession(
+                        type = "QUIZ",
+                        timestamp = System.currentTimeMillis(),
+                        durationSeconds = state.questions.size * 6,
+                        totalQuestions = state.questions.size,
+                        correctCount = state.correctCount,
+                        score = state.score
+                    )
+                )
+            }
         } else {
             _quizState.value = state.copy(
                 currentIndex = nextIndex,
@@ -984,9 +1046,37 @@ class WordViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    fun moveArticleToTrash(article: Article) {
+        viewModelScope.launch {
+            repository.moveArticleToTrash(article.id)
+            userMessage.value = "تم نقل المقال إلى المهملات"
+        }
+    }
+
+    fun restoreArticleFromTrash(article: Article) {
+        viewModelScope.launch {
+            repository.restoreArticleFromTrash(article.id)
+            userMessage.value = "تمت استعادة المقال بنجاح"
+        }
+    }
+
+    fun deleteArticlePermanently(article: Article) {
+        viewModelScope.launch {
+            repository.deleteArticlePermanently(article.id)
+            userMessage.value = "تم حذف المقال نهائياً"
+        }
+    }
+
+    fun emptyArticlesTrash() {
+        viewModelScope.launch {
+            repository.emptyArticlesTrash()
+            userMessage.value = "تم إفراغ سلة مهملات المقالات"
+        }
+    }
+
     fun deleteArticle(id: Long) {
         viewModelScope.launch {
-            repository.deleteArticle(id)
+            repository.deleteArticlePermanently(id)
             userMessage.value = "تم حذف المقال"
         }
     }
@@ -1087,6 +1177,7 @@ class WordViewModel(application: Application) : AndroidViewModel(application) {
 
     override fun onCleared() {
         super.onCleared()
+        audioPlayerManager.release()
         ttsManager.shutdown()
     }
 }

@@ -166,16 +166,16 @@ fun AffixesScreen(
                         )
                     }
 
-                    // Reset / Default Starter
+                    // Clear all button with toast
                     IconButton(
                         onClick = {
-                            viewModel.resetAffixesToDefault()
-                            Toast.makeText(context, "تمت إعادة تعيين السوابق واللواحق القياسية", Toast.LENGTH_SHORT).show()
+                            viewModel.deleteAllAffixes()
+                            Toast.makeText(context, "تم إفراغ قائمة السوابق واللواحق", Toast.LENGTH_SHORT).show()
                         }
                     ) {
                         Icon(
-                            imageVector = Icons.Default.Refresh,
-                            contentDescription = "إعادة تعيين القائمة الأصلية"
+                            imageVector = Icons.Default.Delete,
+                            contentDescription = "مسح القائمة"
                         )
                     }
                 },

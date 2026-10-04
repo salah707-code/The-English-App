@@ -3,15 +3,15 @@ package com.example.data.repository
 import com.example.data.database.AffixDao
 import com.example.data.database.ArticleDao
 import com.example.data.database.CategoryDao
+import com.example.data.database.StudySessionDao
 import com.example.data.database.WordDao
 import com.example.data.model.AffixEntity
 import com.example.data.model.Article
 import com.example.data.model.CategoryEntity
 import com.example.data.model.LearningStats
+import com.example.data.model.StudySession
 import com.example.data.model.Word
 import com.example.data.preferences.AppPreferences
-import com.example.data.sample.StarterArticles
-import com.example.data.sample.StarterVocabulary
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
@@ -24,6 +24,7 @@ class WordRepository(
     private val categoryDao: CategoryDao,
     private val articleDao: ArticleDao,
     private val affixDao: AffixDao,
+    private val studySessionDao: StudySessionDao,
     private val appPreferences: AppPreferences
 ) {
 
@@ -37,10 +38,13 @@ class WordRepository(
         .map { list -> list.associate { it.category to it.count } }
 
     val allArticles: Flow<List<Article>> = articleDao.getAllArticles()
+    val trashArticles: Flow<List<Article>> = articleDao.getTrashArticles()
     val articlesCount: Flow<Int> = articleDao.getArticlesCount()
 
     val allPrefixes: Flow<List<AffixEntity>> = affixDao.getAffixesByType(AffixEntity.TYPE_PREFIX)
     val allSuffixes: Flow<List<AffixEntity>> = affixDao.getAffixesByType(AffixEntity.TYPE_SUFFIX)
+
+    val allStudySessions: Flow<List<StudySession>> = studySessionDao.getAllSessions()
 
     fun getWordsByCategory(category: String): Flow<List<Word>> {
         return wordDao.getWordsByCategory(category)
@@ -59,64 +63,24 @@ class WordRepository(
         }
     }
 
+    /**
+     * وفق متطلبات المشروع:
+     * يبدأ التطبيق نظيفاً تماماً من المحتوى التعليمي، بدون أي كلمات أو مقالات تجريبية أو وهمية.
+     * يمكن للمستخدم إضافة محتواه الخاص عبر الواجهة أو الاستيراد من ملفات CSV/Excel.
+     */
     suspend fun initializeStarterDataIfEmpty() = withContext(Dispatchers.IO) {
-        ensureDefaultCategories()
-        val count = wordDao.getTotalWordsCount().first()
-        if (count == 0) {
-            val starter = StarterVocabulary.getStarterWords()
-            wordDao.insertAll(starter)
-        } else {
-            // Check if category 18 ("العبارات الشائعة") has words, if not add them
-            val phraseWords = wordDao.getWordsByCategory("العبارات الشائعة").first()
-            if (phraseWords.isEmpty()) {
-                val starterPhrases = StarterVocabulary.getStarterWords().filter { it.category == "العبارات الشائعة" }
-                if (starterPhrases.isNotEmpty()) {
-                    wordDao.insertAll(starterPhrases)
-                }
-            }
-        }
-
-        // Initialize starter articles if none exist
-        val articlesCount = articleDao.getArticlesCountDirect()
-        if (articlesCount == 0) {
-            articleDao.insertAll(StarterArticles.getStarterArticles())
-        }
-
-        // Initialize starter prefixes & suffixes if none exist
-        if (affixDao.getCount() == 0) {
-            affixDao.insertAll(AffixEntity.DEFAULT_PREFIXES + AffixEntity.DEFAULT_SUFFIXES)
-        }
+        // لا يتم إدراج أي كلمات أو مقالات وهمية
     }
 
     suspend fun ensureDefaultCategories() = withContext(Dispatchers.IO) {
-        val existing = categoryDao.getAllCategories().first()
-        val existingIds = existing.map { it.id }.toSet()
-        val toInsert = CategoryEntity.DEFAULT_CATEGORIES.filter { !existingIds.contains(it.id) }
-        if (toInsert.isNotEmpty()) {
-            categoryDao.insertAll(toInsert)
-        }
-    }
-
-    suspend fun resetCategoriesToDefaults() = withContext(Dispatchers.IO) {
-        categoryDao.insertAll(CategoryEntity.DEFAULT_CATEGORIES)
+        // لا يتم فرض تصنيفات ثابتة، التصنيفات من إنشاء المستخدم
     }
 
     suspend fun reorderCategories(categories: List<CategoryEntity>) = withContext(Dispatchers.IO) {
         categoryDao.insertAll(categories)
     }
 
-    suspend fun resetAndLoadStarterData() = withContext(Dispatchers.IO) {
-        wordDao.clearAll()
-        categoryDao.insertAll(CategoryEntity.DEFAULT_CATEGORIES)
-        val starter = StarterVocabulary.getStarterWords()
-        wordDao.insertAll(starter)
-        articleDao.clearAll()
-        articleDao.insertAll(StarterArticles.getStarterArticles())
-        affixDao.deleteAll()
-        affixDao.insertAll(AffixEntity.DEFAULT_PREFIXES + AffixEntity.DEFAULT_SUFFIXES)
-    }
-
-    // Affix (Prefix & Suffix) operations
+    // Affix operations
     fun searchAffixes(query: String, type: String): Flow<List<AffixEntity>> {
         return if (query.isBlank()) {
             affixDao.getAffixesByType(type)
@@ -141,9 +105,8 @@ class WordRepository(
         affixDao.delete(affix)
     }
 
-    suspend fun resetAffixesToDefault() = withContext(Dispatchers.IO) {
+    suspend fun deleteAllAffixes() = withContext(Dispatchers.IO) {
         affixDao.deleteAll()
-        affixDao.insertAll(AffixEntity.DEFAULT_PREFIXES + AffixEntity.DEFAULT_SUFFIXES)
     }
 
     // Article operations
@@ -160,14 +123,27 @@ class WordRepository(
         articleDao.insertAll(articles)
     }
 
-    suspend fun deleteArticle(id: Long) = withContext(Dispatchers.IO) {
+    suspend fun moveArticleToTrash(id: Long) = withContext(Dispatchers.IO) {
+        articleDao.moveToTrash(id)
+    }
+
+    suspend fun restoreArticleFromTrash(id: Long) = withContext(Dispatchers.IO) {
+        articleDao.restoreFromTrash(id)
+    }
+
+    suspend fun deleteArticlePermanently(id: Long) = withContext(Dispatchers.IO) {
         articleDao.deleteArticle(id)
+    }
+
+    suspend fun emptyArticlesTrash() = withContext(Dispatchers.IO) {
+        articleDao.emptyTrash()
     }
 
     suspend fun reorderArticles(articles: List<Article>) = withContext(Dispatchers.IO) {
         articleDao.updateAll(articles)
     }
 
+    // Category operations
     suspend fun insertOrUpdateCategory(category: CategoryEntity) = withContext(Dispatchers.IO) {
         categoryDao.insertCategory(category)
     }
@@ -183,6 +159,7 @@ class WordRepository(
         wordDao.deleteWordsByCategory(category.name)
     }
 
+    // Word operations
     suspend fun getWordById(id: Long): Word? = withContext(Dispatchers.IO) {
         wordDao.getWordById(id)
     }
@@ -332,6 +309,23 @@ class WordRepository(
         wordDao.insertAll(words)
     }
 
+    suspend fun clearAllData() = withContext(Dispatchers.IO) {
+        wordDao.clearAll()
+        categoryDao.clearAll()
+        articleDao.clearAll()
+        affixDao.deleteAll()
+        studySessionDao.clearAll()
+    }
+
+    // Study session recording
+    suspend fun recordStudySession(session: StudySession) = withContext(Dispatchers.IO) {
+        studySessionDao.insertSession(session)
+    }
+
+    fun getTotalStudyTimeSeconds(): Flow<Int?> = studySessionDao.getTotalStudyTimeSeconds()
+    fun getTotalCorrectAnswers(): Flow<Int?> = studySessionDao.getTotalCorrectAnswers()
+    fun getTotalQuestionsAnswered(): Flow<Int?> = studySessionDao.getTotalQuestionsAnswered()
+
     fun getLearningStatsFlow(): Flow<LearningStats> {
         val now = System.currentTimeMillis()
         return combine(
@@ -348,7 +342,6 @@ class WordRepository(
             val masteredCount = words.count { it.status == Word.STATUS_MASTERED || it.isMastered }
             val favCount = words.count { it.isFavorite }
 
-            val levels = words.groupingBy { it.level.uppercase() }.eachCount()
             val categories = words.groupingBy { it.category }.eachCount()
 
             LearningStats(
@@ -362,7 +355,7 @@ class WordRepository(
                 streakDays = streak,
                 wordsLearnedToday = learnedToday,
                 dailyGoal = goal,
-                levelDistribution = levels,
+                levelDistribution = emptyMap(), // CEFR removed
                 categoryDistribution = categories
             )
         }

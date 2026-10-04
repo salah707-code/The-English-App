@@ -57,6 +57,40 @@ class AppPreferences(context: Context) {
     // Transient session unlock state
     val isSessionUnlocked = MutableStateFlow(!_isAppLockEnabled.value || _appLockPin.value.isBlank())
 
+    // Accent Color & Display
+    private val _accentColor = MutableStateFlow(prefs.getString(KEY_ACCENT_COLOR, "BLUE") ?: "BLUE")
+    val accentColor: StateFlow<String> = _accentColor.asStateFlow()
+
+    private val _articleFontSize = MutableStateFlow(prefs.getFloat(KEY_ARTICLE_FONT_SIZE, 16f))
+    val articleFontSize: StateFlow<Float> = _articleFontSize.asStateFlow()
+
+    private val _tableFontSize = MutableStateFlow(prefs.getString(KEY_TABLE_FONT_SIZE, "MEDIUM") ?: "MEDIUM")
+    val tableFontSize: StateFlow<String> = _tableFontSize.asStateFlow()
+
+    private val _vocabularyViewMode = MutableStateFlow(prefs.getString(KEY_VOCAB_VIEW_MODE, "TABLE") ?: "TABLE")
+    val vocabularyViewMode: StateFlow<String> = _vocabularyViewMode.asStateFlow()
+
+    fun setAccentColor(color: String) {
+        prefs.edit().putString(KEY_ACCENT_COLOR, color).apply()
+        _accentColor.value = color
+    }
+
+    fun setArticleFontSize(size: Float) {
+        val clamped = size.coerceIn(12f, 32f)
+        prefs.edit().putFloat(KEY_ARTICLE_FONT_SIZE, clamped).apply()
+        _articleFontSize.value = clamped
+    }
+
+    fun setTableFontSize(size: String) {
+        prefs.edit().putString(KEY_TABLE_FONT_SIZE, size).apply()
+        _tableFontSize.value = size
+    }
+
+    fun setVocabularyViewMode(mode: String) {
+        prefs.edit().putString(KEY_VOCAB_VIEW_MODE, mode).apply()
+        _vocabularyViewMode.value = mode
+    }
+
     fun setUserName(name: String) {
         val cleanName = name.trim().ifBlank { "المتعلّم" }
         prefs.edit().putString(KEY_USER_NAME, cleanName).apply()
@@ -211,5 +245,9 @@ class AppPreferences(context: Context) {
         const val KEY_PROFILE_IMAGE_URI = "key_profile_image_uri"
         const val KEY_APP_LOCK_ENABLED = "key_app_lock_enabled"
         const val KEY_APP_LOCK_PIN = "key_app_lock_pin"
+        const val KEY_ACCENT_COLOR = "key_accent_color"
+        const val KEY_ARTICLE_FONT_SIZE = "key_article_font_size"
+        const val KEY_TABLE_FONT_SIZE = "key_table_font_size"
+        const val KEY_VOCAB_VIEW_MODE = "key_vocab_view_mode"
     }
 }

@@ -60,7 +60,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.R
 import com.example.data.model.Word
 import com.example.data.repository.FlashcardAnswer
-import com.example.ui.components.getLevelColor
 import com.example.ui.theme.ErrorColor
 import com.example.ui.theme.StarGold
 import com.example.ui.theme.SuccessColor
@@ -273,8 +272,6 @@ fun FlipCardView(
         label = "card_rotation"
     )
 
-    val levelColor = getLevelColor(word.level)
-
     Card(
         modifier = modifier
             .graphicsLayer {
@@ -289,7 +286,7 @@ fun FlipCardView(
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         if (rotation <= 90f) {
-            // FRONT SIDE: English Word, Phonetics, Level, Audio Prompt
+            // FRONT SIDE: English Word, Phonetics, Category, Audio Prompt
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -304,12 +301,12 @@ fun FlipCardView(
                 ) {
                     Surface(
                         shape = RoundedCornerShape(8.dp),
-                        color = levelColor.copy(alpha = 0.15f)
+                        color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.6f)
                     ) {
                         Text(
-                            text = word.level,
+                            text = word.category.ifBlank { "عام" },
                             style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
-                            color = levelColor,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer,
                             modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
                         )
                     }

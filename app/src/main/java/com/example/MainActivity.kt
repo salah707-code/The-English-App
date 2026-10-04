@@ -66,6 +66,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             val language by viewModel.preferences.language.collectAsStateWithLifecycle()
             val themeMode by viewModel.preferences.themeMode.collectAsStateWithLifecycle()
+            val accentColorKey by viewModel.preferences.accentColor.collectAsStateWithLifecycle()
             val isAppLockEnabled by viewModel.isAppLockEnabled.collectAsStateWithLifecycle()
             val isSessionUnlocked by viewModel.isSessionUnlocked.collectAsStateWithLifecycle()
 
@@ -83,7 +84,10 @@ class MainActivity : ComponentActivity() {
                 LocalConfiguration provides config,
                 LocalLayoutDirection provides layoutDirection
             ) {
-                EnglishLearnTheme(themeMode = themeMode) {
+                EnglishLearnTheme(
+                    themeMode = themeMode,
+                    accentColorKey = accentColorKey
+                ) {
                     if (isAppLockEnabled && !isSessionUnlocked) {
                         AppLockScreen(
                             viewModel = viewModel,

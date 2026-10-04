@@ -15,7 +15,7 @@ class ExampleUnitTest {
         val options = (distractors + target.arabic).shuffled()
         val question = QuizQuestion(
             prompt = target.english,
-            subPrompt = "Food • A1",
+            subPrompt = "Food",
             options = options,
             correctIndex = options.indexOf(target.arabic),
             word = target,
@@ -37,7 +37,7 @@ class ExampleUnitTest {
         val options = (distractors + target.english).shuffled()
         val question = QuizQuestion(
             prompt = target.arabic,
-            subPrompt = "Education • A1",
+            subPrompt = "Education",
             options = options,
             correctIndex = options.indexOf(target.english),
             word = target,

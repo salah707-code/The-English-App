@@ -90,6 +90,7 @@ fun HomeScreen(
     val stats by viewModel.learningStats.collectAsStateWithLifecycle()
     val dueWords by viewModel.dueForReviewWords.collectAsStateWithLifecycle()
     val allWords by viewModel.allWords.collectAsStateWithLifecycle()
+    val categories by viewModel.allCategories.collectAsStateWithLifecycle()
     val userName by viewModel.userName.collectAsStateWithLifecycle()
     val profileImageUri by viewModel.profileImageUri.collectAsStateWithLifecycle()
 
@@ -356,26 +357,53 @@ fun HomeScreen(
                     )
 
                     TextButton(onClick = { onNavigate(Screen.Categories.route) }) {
-                        Text("عرض الكل (19)", fontWeight = FontWeight.Bold)
+                        Text("عرض الكل (${categories.size})", fontWeight = FontWeight.Bold)
                     }
                 }
 
                 Spacer(modifier = Modifier.height(12.dp))
 
-                LazyRow(
-                    horizontalArrangement = Arrangement.spacedBy(10.dp),
-                    contentPadding = PaddingValues(end = 8.dp)
-                ) {
-                    items(Word.ALL_CATEGORIES) { cat ->
-                        val count = stats.categoryDistribution[cat] ?: 0
-                        CategoryChipCard(
-                            category = cat,
-                            count = count,
-                            onClick = {
-                                viewModel.selectedCategory.value = cat
-                                onNavigate(Screen.Words.route)
-                            }
-                        )
+                if (categories.isEmpty()) {
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { onNavigate(Screen.Categories.route) },
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(16.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Category,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Text(
+                                text = "لا توجد تصنيفات حتى الآن. اضغط لإنشاء وتصنيف كلماتك.",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                } else {
+                    LazyRow(
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                        contentPadding = PaddingValues(end = 8.dp)
+                    ) {
+                        items(categories) { catEntity ->
+                            val count = stats.categoryDistribution[catEntity.name] ?: 0
+                            CategoryChipCard(
+                                category = catEntity.name,
+                                count = count,
+                                onClick = {
+                                    viewModel.selectedCategory.value = catEntity.name
+                                    onNavigate(Screen.Words.route)
+                                }
+                            )
+                        }
                     }
                 }
             }

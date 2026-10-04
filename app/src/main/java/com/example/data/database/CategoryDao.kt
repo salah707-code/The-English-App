@@ -42,4 +42,7 @@ interface CategoryDao {
 
     @Query("SELECT category, COUNT(*) as count FROM words WHERE isDeleted = 0 GROUP BY category")
     fun getCategoryWordCounts(): Flow<List<CategoryCountResult>>
+
+    @Query("DELETE FROM categories")
+    suspend fun clearAll()
 }

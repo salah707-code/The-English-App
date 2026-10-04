@@ -42,12 +42,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.R
 import com.example.data.model.Word
-import com.example.ui.theme.LevelA1Color
-import com.example.ui.theme.LevelA2Color
-import com.example.ui.theme.LevelB1Color
-import com.example.ui.theme.LevelB2Color
-import com.example.ui.theme.LevelC1Color
-import com.example.ui.theme.LevelC2Color
 import com.example.ui.theme.StarGold
 
 import androidx.compose.ui.platform.LocalLayoutDirection
@@ -235,17 +229,5 @@ fun StatusBadge(status: String, isMastered: Boolean) {
             color = fg,
             modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
         )
-    }
-}
-
-fun getLevelColor(level: String): Color {
-    return when (level.uppercase()) {
-        "A1" -> LevelA1Color
-        "A2" -> LevelA2Color
-        "B1" -> LevelB1Color
-        "B2" -> LevelB2Color
-        "C1" -> LevelC1Color
-        "C2" -> LevelC2Color
-        else -> LevelA1Color
     }
 }

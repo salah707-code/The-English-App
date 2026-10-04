@@ -13,7 +13,6 @@ import com.squareup.moshi.JsonClass
         Index(value = ["isDeleted", "isFavorite"]),
         Index(value = ["isDeleted", "isMastered"]),
         Index(value = ["isDeleted", "category"]),
-        Index(value = ["isDeleted", "level"]),
         Index(value = ["isDeleted", "nextReviewAt"]),
         Index(value = ["english"]),
         Index(value = ["arabic"])
@@ -24,14 +23,15 @@ data class Word(
     val id: Long = 0,
     val english: String,
     val arabic: String,
-    val category: String = "General",
+    val category: String = "عام",
     val subcategory: String = "",
-    val level: String = "A1", // A1, A2, B1, B2, C1, C2
+    val level: String = "",
     val partOfSpeech: String = "Noun", // Noun, Verb, Adjective, Adverb, Idiom, Phrase, Preposition, Conjunction
-    val pronunciation: String = "", // e.g. /ɪnˈvaɪrənmənt/
+    val pronunciation: String = "", // e.g. /əˈbændən/
     val example: String = "",
     val exampleArabic: String = "",
-    val audioUrl: String = "",
+    val audioUrl: String = "", // Word Audio file path / URI
+    val sentenceAudioUrl: String = "", // Sentence Audio file path / URI
     val status: String = STATUS_NEW, // "NEW", "LEARNING", "REVIEW", "MASTERED"
     val isFavorite: Boolean = false,
     val isMastered: Boolean = false,
@@ -50,20 +50,8 @@ data class Word(
         const val STATUS_REVIEW = "REVIEW"
         const val STATUS_MASTERED = "MASTERED"
 
-        val ALL_LEVELS = listOf("A1", "A2", "B1", "B2", "C1", "C2")
         val ALL_PARTS_OF_SPEECH = listOf(
             "Noun", "Verb", "Adjective", "Adverb", "Idiom", "Phrase", "Preposition", "Conjunction"
-        )
-        val ALL_CATEGORIES = listOf(
-            "Daily Life",
-            "Business",
-            "Technology",
-            "Science & Nature",
-            "Travel & Culture",
-            "Health & Mind",
-            "Academic",
-            "Idioms & Phrases",
-            "General"
         )
     }
 }

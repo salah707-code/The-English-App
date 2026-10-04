@@ -73,7 +73,6 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.R
 import com.example.data.model.Word
-import com.example.ui.components.getLevelColor
 import com.example.ui.theme.SuccessColor
 import com.example.viewmodel.WordViewModel
 
@@ -85,31 +84,49 @@ fun StatsScreen(
     modifier: Modifier = Modifier
 ) {
     val stats by viewModel.learningStats.collectAsStateWithLifecycle()
+    val allSessions by viewModel.allStudySessions.collectAsStateWithLifecycle()
     var selectedTimeframe by remember { mutableStateOf("7 أيام") }
     var selectedBarIndex by remember { mutableStateOf<Int?>(null) }
 
-    // Mock weekly study time (minutes per day) correlated with streak and learned words
-    val dailyMinutes = remember(stats.streakDays, stats.wordsLearnedToday) {
-        val base = listOf(22, 35, 18, 42, 28, 50, (stats.wordsLearnedToday * 3).coerceIn(15, 65))
-        val days = listOf("السبت", "الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "اليوم")
-        days.zip(base)
+    // Real weekly study time (minutes per day) calculated from actual user StudySessions
+    val dailyStats = remember(allSessions) {
+        val dayNames = listOf("الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت")
+        val now = System.currentTimeMillis()
+        (6 downTo 0).map { daysAgo ->
+            val cal = java.util.Calendar.getInstance().apply {
+                timeInMillis = now
+                add(java.util.Calendar.DAY_OF_YEAR, -daysAgo)
+                set(java.util.Calendar.HOUR_OF_DAY, 0)
+                set(java.util.Calendar.MINUTE, 0)
+                set(java.util.Calendar.SECOND, 0)
+                set(java.util.Calendar.MILLISECOND, 0)
+            }
+            val startOfDay = cal.timeInMillis
+            val endOfDay = startOfDay + 86400000L
+            val dayOfWeek = cal.get(java.util.Calendar.DAY_OF_WEEK) - 1
+            val label = if (daysAgo == 0) "اليوم" else dayNames[dayOfWeek]
+
+            val sessionsInDay = allSessions.filter { it.timestamp in startOfDay until endOfDay }
+            val minutes = sessionsInDay.sumOf { it.durationSeconds } / 60
+            val correct = sessionsInDay.sumOf { it.correctCount }
+            Triple(label, minutes, correct)
+        }
+    }
+
+    val dailyMinutes = remember(dailyStats) {
+        dailyStats.map { it.first to it.second }
     }
 
     val totalWeeklyMinutes = dailyMinutes.sumOf { it.second }
     val avgDailyMinutes = if (dailyMinutes.isNotEmpty()) totalWeeklyMinutes / dailyMinutes.size else 0
 
-    // Mastered words trajectory over last 7 sessions
-    val masteredTrajectory = remember(stats.masteredWords) {
-        val current = stats.masteredWords
-        listOf(
-            (current - 18).coerceAtLeast(0),
-            (current - 14).coerceAtLeast(0),
-            (current - 11).coerceAtLeast(0),
-            (current - 8).coerceAtLeast(0),
-            (current - 5).coerceAtLeast(0),
-            (current - 2).coerceAtLeast(0),
-            current
-        )
+    // Mastered / Correct trajectory based on real sessions
+    val masteredTrajectory = remember(dailyStats, stats.masteredWords) {
+        var cum = 0
+        dailyStats.map {
+            cum += it.third
+            cum
+        }
     }
 
     // Force RTL for Arabic layout clarity
@@ -673,7 +690,7 @@ fun StatsScreen(
                     }
                 }
 
-                // CEFR Levels Breakdown (توزيع المستويات)
+                // Category Breakdown (توزيع التصنيفات)
                 item {
                     Card(
                         modifier = Modifier.fillMaxWidth(),
@@ -688,44 +705,53 @@ fun StatsScreen(
                             verticalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
                             Text(
-                                text = "توزيع المستويات وفق الإطار الأوروبي (CEFR)",
+                                text = "توزيع المفردات حسب التصنيفات",
                                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                                 color = MaterialTheme.colorScheme.onSurface
                             )
 
-                            Word.ALL_LEVELS.forEach { level ->
-                                val count = stats.levelDistribution[level] ?: 0
-                                val pct = if (stats.totalWords > 0) (count.toFloat() / stats.totalWords.toFloat()) else 0f
-                                val levelColor = getLevelColor(level)
+                            if (stats.categoryDistribution.isEmpty()) {
+                                Text(
+                                    text = "لا توجد تصنيفات أو كلمات مسجلة بعد",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            } else {
+                                stats.categoryDistribution.entries.forEach { entry ->
+                                    val catName = entry.key
+                                    val count = entry.value
+                                    val pct = if (stats.totalWords > 0) (count.toFloat() / stats.totalWords.toFloat()) else 0f
+                                    val catColor = MaterialTheme.colorScheme.primary
 
-                                Column {
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.SpaceBetween
-                                    ) {
-                                        Text(
-                                            text = level,
-                                            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
-                                            color = levelColor
-                                        )
-                                        Text(
-                                            text = "$count كلمة (${(pct * 100).toInt()}%)",
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    Column {
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.SpaceBetween
+                                        ) {
+                                            Text(
+                                                text = catName,
+                                                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
+                                                color = MaterialTheme.colorScheme.onSurface
+                                            )
+                                            Text(
+                                                text = "$count كلمة (${(pct * 100).toInt()}%)",
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                        }
+
+                                        Spacer(modifier = Modifier.height(4.dp))
+
+                                        LinearProgressIndicator(
+                                            progress = { pct },
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .height(6.dp)
+                                                .clip(RoundedCornerShape(3.dp)),
+                                            color = catColor,
+                                            trackColor = MaterialTheme.colorScheme.surfaceVariant
                                         )
                                     }
-
-                                    Spacer(modifier = Modifier.height(4.dp))
-
-                                    LinearProgressIndicator(
-                                        progress = { pct },
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .height(6.dp)
-                                            .clip(RoundedCornerShape(3.dp)),
-                                        color = levelColor,
-                                        trackColor = MaterialTheme.colorScheme.surfaceVariant
-                                    )
                                 }
                             }
                         }

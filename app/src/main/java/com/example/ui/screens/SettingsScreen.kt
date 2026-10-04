@@ -526,7 +526,7 @@ fun SettingsScreen(
                 }
             }
 
-            // Danger Zone: Reset Data
+            // Danger Zone: Clear all user data
             item {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
@@ -539,13 +539,13 @@ fun SettingsScreen(
                             .padding(18.dp)
                     ) {
                         Text(
-                            text = "Reset & Sample Data",
+                            text = "مسح جميع البيانات (بدء جديد)",
                             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                             color = MaterialTheme.colorScheme.error
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            text = "Restore curated CEFR A1-C2 starter vocabulary dictionary with rich sentences and translations.",
+                            text = "حذف كافة الكلمات والمقالات والتصنيفات والبدء بسجل نظيف فارغ تماماً للمحتوى الخاص بك.",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -556,9 +556,9 @@ fun SettingsScreen(
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(12.dp)
                         ) {
-                            Icon(imageVector = Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(18.dp))
+                            Icon(imageVector = Icons.Default.Delete, contentDescription = null, modifier = Modifier.size(18.dp))
                             Spacer(modifier = Modifier.width(6.dp))
-                            Text("Reset & Load Starter Data")
+                            Text("مسح جميع البيانات وإفراغ التطبيق")
                         }
                     }
                 }
@@ -648,22 +648,23 @@ fun SettingsScreen(
     if (showResetDialog) {
         AlertDialog(
             onDismissRequest = { showResetDialog = false },
-            title = { Text("Reset Vocabulary Dictionary") },
-            text = { Text("This will reset all words to the curated starter vocabulary (85+ words across 19 categories). Are you sure?") },
+            title = { Text("مسح جميع البيانات") },
+            text = { Text("هل أنت متأكد من رغبتك في حذف جميع الكلمات والمقالات والتصنيفات والبدء بسجل فارغ تماماً؟ لا يمكن التراجع عن هذا الإجراء.") },
             confirmButton = {
                 Button(
                     onClick = {
-                        viewModel.resetAndLoadSampleData()
+                        viewModel.clearAllData()
                         showResetDialog = false
+                        Toast.makeText(context, "تم إفراغ قاعدة البيانات بنجاح", Toast.LENGTH_SHORT).show()
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
                 ) {
-                    Text("Reset Now")
+                    Text("نعم، مسح الكل")
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showResetDialog = false }) {
-                    Text("Cancel")
+                    Text("إلغاء")
                 }
             }
         )
