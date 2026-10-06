@@ -259,12 +259,35 @@ class WordViewModel(application: Application) : AndroidViewModel(application) {
     val userMessage = MutableStateFlow<String?>(null)
 
     init {
-        // التطبيق يبدأ فارغاً بدون فرض بيانات وهمية أو starter content
+        viewModelScope.launch {
+            repository.ensureDefaultCategories()
+        }
     }
 
-    fun clearCategories() {
+    fun addCategory(name: String, englishName: String = "", colorHex: String = "#3B82F6", iconName: String = "Category") {
         viewModelScope.launch {
-            // حذف التصنيفات المخصصة
+            val cleanName = name.trim()
+            if (cleanName.isNotBlank()) {
+                val newId = "cat_${System.currentTimeMillis()}"
+                val maxOrder = allCategories.value.maxOfOrNull { it.orderIndex } ?: 0
+                val cat = CategoryEntity(
+                    id = newId,
+                    name = cleanName,
+                    englishName = englishName.trim(),
+                    colorHex = colorHex,
+                    iconName = iconName,
+                    orderIndex = maxOrder + 1
+                )
+                repository.insertCategory(cat)
+                userMessage.value = "تمت إضافة التصنيف «$cleanName» بنجاح"
+            }
+        }
+    }
+
+    fun restoreDefaultCategories() {
+        viewModelScope.launch {
+            repository.resetCategoriesToDefaults()
+            userMessage.value = "تمت استعادة التصنيفات القياسية"
         }
     }
 

@@ -73,7 +73,27 @@ class WordRepository(
     }
 
     suspend fun ensureDefaultCategories() = withContext(Dispatchers.IO) {
-        // لا يتم فرض تصنيفات ثابتة، التصنيفات من إنشاء المستخدم
+        val count = categoryDao.getCategoriesCount()
+        if (count == 0) {
+            categoryDao.insertAll(CategoryEntity.DEFAULT_CATEGORIES)
+        }
+    }
+
+    suspend fun resetCategoriesToDefaults() = withContext(Dispatchers.IO) {
+        categoryDao.clearAll()
+        categoryDao.insertAll(CategoryEntity.DEFAULT_CATEGORIES)
+    }
+
+    suspend fun insertCategory(category: CategoryEntity) = withContext(Dispatchers.IO) {
+        categoryDao.insertCategory(category)
+    }
+
+    suspend fun deleteCategory(id: String) = withContext(Dispatchers.IO) {
+        categoryDao.deleteCategory(id)
+    }
+
+    suspend fun updateCategory(category: CategoryEntity) = withContext(Dispatchers.IO) {
+        categoryDao.updateCategory(category)
     }
 
     suspend fun reorderCategories(categories: List<CategoryEntity>) = withContext(Dispatchers.IO) {

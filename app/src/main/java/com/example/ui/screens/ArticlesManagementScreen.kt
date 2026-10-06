@@ -58,6 +58,7 @@ import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -490,8 +491,11 @@ fun ArticlesManagementScreen(
 
     // Dialog: Full Reading View
     if (articleToRead != null) {
+        val currentArticleFontSize by viewModel.preferences.articleFontSize.collectAsStateWithLifecycle()
         ArticleReaderDialog(
             article = articleToRead!!,
+            currentFontSize = currentArticleFontSize,
+            onFontSizeChange = { viewModel.preferences.setArticleFontSize(it) },
             onDismiss = { articleToRead = null },
             onSpeak = { text -> viewModel.speakEnglish(text) },
             onEdit = {
@@ -828,11 +832,12 @@ private fun ArticleCardItem(
 @Composable
 private fun ArticleReaderDialog(
     article: Article,
+    currentFontSize: Float,
+    onFontSizeChange: (Float) -> Unit,
     onDismiss: () -> Unit,
     onSpeak: (String) -> Unit,
     onEdit: () -> Unit
 ) {
-    var fontSizeSp by remember { mutableFloatStateOf(16f) }
     val clipboard = LocalClipboardManager.current
 
     val wordCount = remember(article.content) {
@@ -854,7 +859,7 @@ private fun ArticleReaderDialog(
                             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
                         )
                         Text(
-                            text = "المستوى: ${article.level} • ${article.category} • $wordCount كلمة",
+                            text = "${article.category.ifBlank { "عام" }} • $wordCount كلمة • الخط: ${currentFontSize.toInt()}sp",
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -863,13 +868,13 @@ private fun ArticleReaderDialog(
                     // Font Size controls: A- and A+
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         IconButton(
-                            onClick = { if (fontSizeSp > 12f) fontSizeSp -= 2f },
+                            onClick = { onFontSizeChange((currentFontSize - 2f).coerceAtLeast(12f)) },
                             modifier = Modifier.size(32.dp)
                         ) {
-                            Text("A-", fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                            Text("A−", fontWeight = FontWeight.Bold, fontSize = 12.sp)
                         }
                         IconButton(
-                            onClick = { if (fontSizeSp < 26f) fontSizeSp += 2f },
+                            onClick = { onFontSizeChange((currentFontSize + 2f).coerceAtMost(32f)) },
                             modifier = Modifier.size(32.dp)
                         ) {
                             Text("A+", fontWeight = FontWeight.Bold, fontSize = 15.sp)
@@ -921,8 +926,8 @@ private fun ArticleReaderDialog(
                     ) {
                         Text(
                             text = article.content,
-                            fontSize = fontSizeSp.sp,
-                            lineHeight = (fontSizeSp * 1.6f).sp,
+                            fontSize = currentFontSize.sp,
+                            lineHeight = (currentFontSize * 1.6f).sp,
                             style = MaterialTheme.typography.bodyMedium.copy(
                                 textDirection = TextDirection.Ltr
                             ),

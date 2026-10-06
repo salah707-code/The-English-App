@@ -26,6 +26,7 @@ import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.BarChart
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.ColorLens
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Edit
@@ -35,11 +36,17 @@ import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.RestartAlt
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.SwapVert
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -49,6 +56,7 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -92,6 +100,8 @@ fun CategoryManagementScreen(
     val articlesCount by viewModel.articlesCount.collectAsState()
 
     var searchQuery by remember { mutableStateOf("") }
+    var showAddCategoryDialog by remember { mutableStateOf(false) }
+    var categoryToDelete by remember { mutableStateOf<CategoryEntity?>(null) }
     var editingColorCategory by remember { mutableStateOf<CategoryEntity?>(null) }
     var editingIconCategory by remember { mutableStateOf<CategoryEntity?>(null) }
     var renamingCategory by remember { mutableStateOf<CategoryEntity?>(null) }
@@ -114,6 +124,16 @@ fun CategoryManagementScreen(
     CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
         Scaffold(
             snackbarHost = { SnackbarHost(snackbarHostState) },
+            floatingActionButton = {
+                FloatingActionButton(
+                    onClick = { showAddCategoryDialog = true },
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary,
+                    modifier = Modifier.testTag("fab_add_category")
+                ) {
+                    Icon(imageVector = Icons.Default.Add, contentDescription = "إضافة تصنيف جديد")
+                }
+            },
             topBar = {
                 TopAppBar(
                     title = {
@@ -123,7 +143,7 @@ fun CategoryManagementScreen(
                                 style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
                             )
                             Text(
-                                text = "${categories.size} تصنيفاً معتمداً • شبكة البطاقات التفاعلية",
+                                text = "${categories.size} تصنيفاً • شبكة البطاقات التفاعلية",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -142,25 +162,37 @@ fun CategoryManagementScreen(
                     },
                     actions = {
                         IconButton(
-                            onClick = { isReorderDialogOpen = true }
+                            onClick = { showAddCategoryDialog = true },
+                            modifier = Modifier.testTag("btn_add_category_top")
                         ) {
                             Icon(
-                                imageVector = Icons.Default.SwapVert,
-                                contentDescription = "إعادة ترتيب البطاقات",
+                                imageVector = Icons.Default.Add,
+                                contentDescription = "إضافة تصنيف",
                                 tint = MaterialTheme.colorScheme.primary
                             )
                         }
 
                         IconButton(
                             onClick = {
+                                viewModel.restoreDefaultCategories()
                                 scope.launch {
-                                    snackbarHostState.showSnackbar("تم الحفظ والمزامنة التلقائية مع قاعدة البيانات")
+                                    snackbarHostState.showSnackbar("تمت استعادة التصنيفات القياسية بنجاح")
                                 }
                             }
                         ) {
                             Icon(
-                                imageVector = Icons.Default.RestartAlt,
-                                contentDescription = "تحديث"
+                                imageVector = Icons.Default.Refresh,
+                                contentDescription = "استعادة التصنيفات القياسية"
+                            )
+                        }
+
+                        IconButton(
+                            onClick = { isReorderDialogOpen = true }
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.SwapVert,
+                                contentDescription = "إعادة ترتيب البطاقات",
+                                tint = MaterialTheme.colorScheme.primary
                             )
                         }
                     },
@@ -318,11 +350,121 @@ fun CategoryManagementScreen(
                             onClick = { onCategoryClick(category) },
                             onEditColor = { editingColorCategory = category },
                             onEditIcon = { editingIconCategory = category },
-                            onRename = { renamingCategory = category }
+                            onRename = { renamingCategory = category },
+                            onDelete = { categoryToDelete = category }
                         )
                     }
                 }
             }
+        }
+
+        // Add Category Dialog
+        if (showAddCategoryDialog) {
+            var newCatName by remember { mutableStateOf("") }
+            var newCatEnglish by remember { mutableStateOf("") }
+            var selectedColorHex by remember { mutableStateOf("#3B82F6") }
+            val colorOptions = listOf("#3B82F6", "#10B981", "#F59E0B", "#8B5CF6", "#EC4899", "#EF4444", "#F97316", "#06B6D4")
+
+            AlertDialog(
+                onDismissRequest = { showAddCategoryDialog = false },
+                title = {
+                    Text("إضافة تصنيف جديد", fontWeight = FontWeight.Bold)
+                },
+                text = {
+                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                        OutlinedTextField(
+                            value = newCatName,
+                            onValueChange = { newCatName = it },
+                            label = { Text("اسم التصنيف (بالعربية)") },
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        OutlinedTextField(
+                            value = newCatEnglish,
+                            onValueChange = { newCatEnglish = it },
+                            label = { Text("الاسم بالإنجليزية (اختياري)") },
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        Text("اختر لون التصنيف:", style = MaterialTheme.typography.bodySmall)
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            colorOptions.forEach { hex ->
+                                val color = CategoryIconHelper.parseColor(hex)
+                                Box(
+                                    modifier = Modifier
+                                        .size(32.dp)
+                                        .clip(CircleShape)
+                                        .background(color)
+                                        .clickable { selectedColorHex = hex }
+                                        .then(
+                                            if (selectedColorHex == hex) Modifier.padding(2.dp) else Modifier
+                                        ),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    if (selectedColorHex == hex) {
+                                        Icon(Icons.Default.Check, contentDescription = null, tint = Color.White, modifier = Modifier.size(16.dp))
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            if (newCatName.isNotBlank()) {
+                                viewModel.addCategory(
+                                    name = newCatName,
+                                    englishName = newCatEnglish,
+                                    colorHex = selectedColorHex
+                                )
+                                showAddCategoryDialog = false
+                                scope.launch {
+                                    snackbarHostState.showSnackbar("تمت إضافة تصنيف «$newCatName» بنجاح")
+                                }
+                            }
+                        }
+                    ) {
+                        Text("إضافة")
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showAddCategoryDialog = false }) {
+                        Text("إلغاء")
+                    }
+                }
+            )
+        }
+
+        // Delete Category Confirmation Dialog
+        categoryToDelete?.let { cat ->
+            AlertDialog(
+                onDismissRequest = { categoryToDelete = null },
+                title = { Text("تأكيد حذف التصنيف") },
+                text = { Text("هل أنت متأكد من رغبتك في حذف تصنيف «${cat.name}»؟") },
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            viewModel.deleteCategory(cat)
+                            categoryToDelete = null
+                            scope.launch {
+                                snackbarHostState.showSnackbar("تم حذف التصنيف بنجاح")
+                            }
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                    ) {
+                        Text("نعم، حذف")
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { categoryToDelete = null }) {
+                        Text("إلغاء")
+                    }
+                }
+            )
         }
 
         // Category Reorder Dialog
@@ -400,7 +542,8 @@ fun CategoryCardItem(
     onClick: () -> Unit,
     onEditColor: () -> Unit,
     onEditIcon: () -> Unit,
-    onRename: () -> Unit
+    onRename: () -> Unit,
+    onDelete: () -> Unit
 ) {
     val categoryColor = CategoryIconHelper.parseColor(category.colorHex)
     var menuExpanded by remember { mutableStateOf(false) }
@@ -545,6 +688,16 @@ fun CategoryCardItem(
                                 onClick = {
                                     menuExpanded = false
                                     onMoveDown()
+                                }
+                            )
+                            DropdownMenuItem(
+                                text = { Text("حذف التصنيف", color = MaterialTheme.colorScheme.error) },
+                                leadingIcon = {
+                                    Icon(Icons.Default.Delete, contentDescription = null, tint = MaterialTheme.colorScheme.error)
+                                },
+                                onClick = {
+                                    menuExpanded = false
+                                    onDelete()
                                 }
                             )
                         }

@@ -26,17 +26,21 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.filled.CameraAlt
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Extension
 import androidx.compose.material.icons.filled.FileUpload
+import androidx.compose.material.icons.filled.FormatSize
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.LockOpen
+import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Speed
+import com.example.ui.theme.AccentPalettes
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -47,6 +51,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
@@ -65,6 +70,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -95,6 +101,9 @@ fun SettingsScreen(
     val audioEnabled by viewModel.preferences.audioEnabled.collectAsStateWithLifecycle()
     val dailyGoal by viewModel.preferences.dailyGoal.collectAsStateWithLifecycle()
     val hideMastered by viewModel.preferences.hideMastered.collectAsStateWithLifecycle()
+    val accentColor by viewModel.preferences.accentColor.collectAsStateWithLifecycle()
+    val articleFontSize by viewModel.preferences.articleFontSize.collectAsStateWithLifecycle()
+    val tableFontSize by viewModel.preferences.tableFontSize.collectAsStateWithLifecycle()
 
     val userName by viewModel.userName.collectAsStateWithLifecycle()
     val profileImageUri by viewModel.profileImageUri.collectAsStateWithLifecycle()
@@ -364,6 +373,243 @@ fun SettingsScreen(
                             isSelected = themeMode == "DARK",
                             onClick = { viewModel.preferences.setThemeMode("DARK") }
                         )
+                    }
+                }
+            }
+
+            // 4. Accent Color Selection (لون التطبيق المميز)
+            item {
+                SettingsSectionCard(
+                    title = "لون التطبيق المميز (Accent Color)",
+                    icon = Icons.Default.Palette
+                ) {
+                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                        Text(
+                            text = "يتم تطبيق هذا اللون على أشرطة التطبيق، الأزرار، أيقونات FAB، التبويبات، والعناصر المحددة:",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+
+                        // Color swatches row
+                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            AccentPalettes.entries.forEach { entry ->
+                                val key = entry.key
+                                val palette = entry.value
+                                val isSelected = accentColor.equals(key, ignoreCase = true)
+
+                                Surface(
+                                    shape = RoundedCornerShape(12.dp),
+                                    color = if (isSelected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable { viewModel.preferences.setAccentColor(key) }
+                                ) {
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(horizontal = 14.dp, vertical = 10.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.SpaceBetween
+                                    ) {
+                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                            Box(
+                                                modifier = Modifier
+                                                    .size(28.dp)
+                                                    .clip(CircleShape)
+                                                    .background(palette.primaryLight),
+                                                contentAlignment = Alignment.Center
+                                            ) {
+                                                if (isSelected) {
+                                                    Icon(
+                                                        imageVector = Icons.Default.Check,
+                                                        contentDescription = null,
+                                                        tint = Color.White,
+                                                        modifier = Modifier.size(16.dp)
+                                                    )
+                                                }
+                                            }
+                                            Spacer(modifier = Modifier.width(12.dp))
+                                            Column {
+                                                Text(
+                                                    text = palette.labelAr,
+                                                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium),
+                                                    color = MaterialTheme.colorScheme.onSurface
+                                                )
+                                                Text(
+                                                    text = key,
+                                                    style = MaterialTheme.typography.labelSmall,
+                                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                                )
+                                            }
+                                        }
+
+                                        RadioButton(
+                                            selected = isSelected,
+                                            onClick = { viewModel.preferences.setAccentColor(key) }
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // 5. Font Size Control (التحكم بحجم الخط)
+            item {
+                SettingsSectionCard(
+                    title = "التحكم بحجم الخط (Font Size)",
+                    icon = Icons.Default.FormatSize
+                ) {
+                    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                        // Subsection A: Article Text Font Size
+                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "حجم خط نصوص المقالات:",
+                                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold)
+                                )
+                                Text(
+                                    text = "${articleFontSize.toInt()} sp",
+                                    style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            }
+
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                OutlinedButton(
+                                    onClick = { viewModel.preferences.setArticleFontSize(articleFontSize - 1f) },
+                                    shape = RoundedCornerShape(8.dp),
+                                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
+                                ) {
+                                    Text("A−", fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                                }
+
+                                Slider(
+                                    value = articleFontSize,
+                                    onValueChange = { viewModel.preferences.setArticleFontSize(it) },
+                                    valueRange = 12f..30f,
+                                    steps = 17,
+                                    modifier = Modifier.weight(1f)
+                                )
+
+                                OutlinedButton(
+                                    onClick = { viewModel.preferences.setArticleFontSize(articleFontSize + 1f) },
+                                    shape = RoundedCornerShape(8.dp),
+                                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
+                                ) {
+                                    Text("A+", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                                }
+                            }
+
+                            // Article text live preview box
+                            Surface(
+                                shape = RoundedCornerShape(12.dp),
+                                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Column(modifier = Modifier.padding(12.dp)) {
+                                    Text(
+                                        text = "معاينة خط المقال (Preview):",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.primary
+                                    )
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Text(
+                                        text = "Reading expands the mind and enriches vocabulary.\nالقراءة تصنع إنساناً كاملاً والمفردات تفتح آفاق المعرفة.",
+                                        fontSize = articleFontSize.sp,
+                                        lineHeight = (articleFontSize * 1.4f).sp,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                }
+                            }
+                        }
+
+                        HorizontalDivider()
+
+                        // Subsection B: Vocabulary Table Font Size
+                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Text(
+                                text = "حجم خط جدول المفردات:",
+                                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold)
+                            )
+
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                listOf(
+                                    Triple("صغير", "12sp", "SMALL"),
+                                    Triple("متوسط", "14sp", "MEDIUM"),
+                                    Triple("كبير", "17sp", "LARGE")
+                                ).forEach { (title, subtitle, key) ->
+                                    val isSelected = tableFontSize == key
+                                    Surface(
+                                        shape = RoundedCornerShape(12.dp),
+                                        color = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .clickable { viewModel.preferences.setTableFontSize(key) }
+                                    ) {
+                                        Column(
+                                            modifier = Modifier.padding(vertical = 10.dp, horizontal = 8.dp),
+                                            horizontalAlignment = Alignment.CenterHorizontally
+                                        ) {
+                                            Text(
+                                                text = title,
+                                                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
+                                                color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
+                                            )
+                                            Text(
+                                                text = subtitle,
+                                                style = MaterialTheme.typography.labelSmall,
+                                                color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f) else MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+
+                            // Table text live preview box
+                            val previewTableSp = when (tableFontSize) {
+                                "SMALL" -> 12.sp
+                                "LARGE" -> 17.sp
+                                else -> 14.sp
+                            }
+                            Surface(
+                                shape = RoundedCornerShape(12.dp),
+                                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(12.dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Column {
+                                        Text(
+                                            text = "Abandon • يتخلى عن",
+                                            fontSize = previewTableSp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MaterialTheme.colorScheme.onSurface
+                                        )
+                                        Text(
+                                            text = "He abandoned the plan. • تخلى عن الخطة.",
+                                            fontSize = (previewTableSp.value - 2).coerceAtLeast(10f).sp,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }
